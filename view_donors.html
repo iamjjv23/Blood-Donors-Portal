@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View All Donors | Blood Donation Portal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif; background-color: #f4f7f6;
+            margin: 0; padding: 20px;
+        }
+        .container {
+            background-color: white; padding: 30px; border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; max-width: 1000px;
+            margin: auto;
+        }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;
+        }
+        h2 { margin: 0; color: #333; }
+        .btn-nav, .btn-logout {
+            background-color: #555; color: white; border: none;
+            padding: 8px 12px; border-radius: 4px; cursor: pointer; margin-left: 5px;
+        }
+        .btn-nav { background-color: #0056b3; }
+        .btn-nav:hover { background-color: #004494; }
+        
+        /* Table Styles */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f8f9fa; color: #333; font-weight: bold; }
+        tr:nth-child(even) { background-color: #fcfcfc; }
+        tr:hover { background-color: #f1f1f1; }
+        
+        .btn-view {
+            background-color: #28a745; color: white; border: none;
+            padding: 6px 12px; border-radius: 4px; cursor: pointer; 
+            text-decoration: none; font-size: 14px; display: inline-block;
+        }
+        .btn-view:hover { background-color: #218838; }
+        
+        .blood-badge {
+            background-color: #d32f2f; color: white; padding: 4px 8px;
+            border-radius: 4px; font-weight: bold; font-size: 14px;
+        }
+        
+        #message { margin-bottom: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2>Donor Database</h2>
+            <div>
+                <button class="btn-nav" onclick="goBack()">Back to Dashboard</button>
+				<button class="btn-nav" onclick="window.location.href='data_entry.html'">Data Entry Form</button>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+        
+        <div id="message">Loading database...</div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Blood Group</th>
+                        <th>Contact</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="donorTableBody">
+                    <!-- Data will be injected here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // === REPLACE WITH YOUR ACTUAL APPS SCRIPT WEB APP URL ===
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwS2kfwhaNRWfhcskWi0PTzoHCHqzyHGo0vOVg8rKbFQGJwEv_3orDSHOJ7hXtcFJO36w/exec';
+
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+
+        // === ON PAGE LOAD ===
+        window.onload = () => {
+            // Master, Organiser, and Data Entry users can all view this
+            if (!token) {
+                alert('Unauthorized access. Redirecting to login.');
+                window.location.href = 'index.html'; 
+                return;
+            }
+            fetchDonors();
+        };
+
+        // === FETCH ALL DONORS API CALL ===
+        async function fetchDonors() {
+            const tableBody = document.getElementById('donorTableBody');
+            const msgDiv = document.getElementById('message');
+            
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getAllDonors&token=${token}`);
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    msgDiv.style.display = 'none'; // Hide loading message
+                    tableBody.innerHTML = '';
+                    
+                    if (result.donors.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No donors found in the database.</td></tr>';
+                        return;
+                    }
+
+                    // Populate rows
+                    result.donors.forEach(donor => {
+                        const row = `<tr>
+                            <td>${donor.id}</td>
+                            <td><strong>${donor.name}</strong></td>
+                            <td><span class="blood-badge">${donor.bloodGroup}</span></td>
+                            <td>${donor.contact}</td>
+                            <td>${donor.location}</td>
+                            <td style="color: ${donor.status === 'Active' ? 'green' : 'orange'}; font-weight: bold;">
+                                ${donor.status}
+                            </td>
+                            <td><a href="donor.html?id=${donor.id}" class="btn-view">View Profile</a></td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                } else {
+                    msgDiv.textContent = 'Error: ' + result.message;
+                    msgDiv.style.color = 'red';
+                }
+            } catch (error) {
+                msgDiv.textContent = 'Connection error while fetching data.';
+                msgDiv.style.color = 'red';
+            }
+        }
+
+        // === NAVIGATION ===
+        function goBack() {
+            if (role === 'Master_admin') window.location.href = 'master.html';
+            else if (role === 'Organiser_user') window.location.href = 'organiser.html';
+            else if (role === 'Data_entry_user') window.location.href = 'data_entry.html';
+            else window.location.href = 'index.html';
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
