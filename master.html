@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Admin Dashboard | Blood Donation Portal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif; background-color: #f4f7f6;
+            margin: 0; padding: 20px; display: flex; justify-content: center;
+        }
+        .container {
+            background-color: white; padding: 30px; border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; max-width: 500px;
+        }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;
+        }
+        h2 { margin: 0; color: #333; }
+        .btn-logout {
+            background-color: #555; color: white; border: none;
+            padding: 8px 12px; border-radius: 4px; cursor: pointer;
+        }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        input[type="text"] {
+            width: 100%; padding: 10px; border: 1px solid #ccc;
+            border-radius: 4px; box-sizing: border-box;
+        }
+        .btn-submit {
+            background-color: #0056b3; color: white; border: none;
+            padding: 10px 15px; border-radius: 4px; cursor: pointer;
+            width: 100%; font-size: 16px;
+        }
+        .btn-submit:hover { background-color: #004494; }
+        #message { margin-bottom: 15px; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2>System Settings</h2>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+        
+        <div id="message"></div>
+
+        <form id="settingsForm">
+            <div class="form-group">
+                <label for="donorSheetId">Donor Database Sheet ID:</label>
+                <input type="text" id="donorSheetId" required placeholder="e.g., 1aBcDeFgHiJkLmNoPqRsTuVwXyZ...">
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    Enter the long ID found in the URL of your secondary Donor Google Sheet.
+                </small>
+            </div>
+            <button type="submit" class="btn-submit">Update Configuration</button>
+        </form>
+    </div>
+
+    <script>
+        // === REPLACE WITH YOUR ACTUAL APPS SCRIPT WEB APP URL ===
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwS2kfwhaNRWfhcskWi0PTzoHCHqzyHGo0vOVg8rKbFQGJwEv_3orDSHOJ7hXtcFJO36w/exec';
+
+        // === ON PAGE LOAD: AUTHENTICATION CHECK ===
+        window.onload = () => {
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+
+            if (!token || role !== 'Master_admin') {
+                alert('Unauthorized access. Redirecting to login.');
+                // Looks in the current folder for index.html
+                window.location.href = 'index.html'; 
+            }
+        };
+
+        // === FORM SUBMISSION HANDLER ===
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const msgDiv = document.getElementById('message');
+            const donorSheetId = document.getElementById('donorSheetId').value.trim();
+            const token = localStorage.getItem('token');
+
+            msgDiv.textContent = 'Updating settings securely...';
+            msgDiv.style.color = '#0056b3';
+
+            const payload = {
+                action: 'updateSettings',
+                token: token,
+                settingsData: [
+                    { key: 'Donor_Sheet_ID', value: donorSheetId }
+                ]
+            };
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    msgDiv.textContent = 'Success: Database link updated!';
+                    msgDiv.style.color = 'green';
+                    document.getElementById('settingsForm').reset();
+                } else {
+                    msgDiv.textContent = 'Error: ' + result.message;
+                    msgDiv.style.color = 'red';
+                }
+            } catch (error) {
+                msgDiv.textContent = 'Connection failed. Check your Web App URL.';
+                msgDiv.style.color = 'red';
+                console.error(error);
+            }
+        });
+
+        // === LOGOUT LOGIC ===
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            localStorage.removeItem('userId');
+            // Looks in the current folder for index.html
+            window.location.href = 'index.html'; 
+        }
+    </script>
+</body>
+</html>
