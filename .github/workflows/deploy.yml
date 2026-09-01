@@ -1,0 +1,40 @@
+name: Deploy Portal with Secrets
+
+on:
+  push:
+    branches:
+      - main  # Change to 'master' if your default branch is named master
+
+# Grants permissions to deploy to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Inject Secret URL into code
+        run: |
+          # Finds all HTML files and replaces the placeholder with your GitHub Secret
+          find . -type f -name "*.html" -exec sed -i "s|UPLACEHOLDER|${{ secrets.ASU }}|g" {} +
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
