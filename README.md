@@ -1,2 +1,2 @@
 # Blood-Donors-Portal
-Database for Blood Donations within Emergency
+Database for Blood Donors 
