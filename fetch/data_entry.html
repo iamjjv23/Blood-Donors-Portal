@@ -4,78 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Entry Dashboard | Blood Donation Portal</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif; background-color: #f4f7f6;
-            margin: 0; padding: 20px; display: flex; justify-content: center;
-        }
-        .container {
-            background-color: white; padding: 30px; border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; max-width: 600px;
-        }
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;
-        }
-        h2 { margin: 0; color: #333; }
-        .header-buttons button {
-            color: white; border: none; padding: 8px 12px; 
-            border-radius: 4px; cursor: pointer; margin-left: 5px;
-        }
-        .btn-nav { background-color: #0056b3; }
-        .btn-nav:hover { background-color: #004494; }
-        .btn-logout { background-color: #555; }
-        
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        input[type="text"], input[type="tel"], input[type="date"], select {
-            width: 100%; padding: 10px; border: 1px solid #ccc;
-            border-radius: 4px; box-sizing: border-box;
-        }
-        .btn-submit {
-            background-color: #28a745; color: white; border: none;
-            padding: 12px; border-radius: 4px; cursor: pointer;
-            width: 100%; font-size: 16px; font-weight: bold; margin-top: 10px;
-        }
-        .btn-submit:hover { background-color: #218838; }
-        #message { margin-bottom: 15px; font-weight: bold; text-align: center; }
-
-        /* Quick Search & Auto-Complete Styles */
-        .search-box {
-            background-color: #f8f9fa; padding: 15px; border-radius: 6px;
-            border: 1px solid #ddd; margin-bottom: 25px;
-        }
-        .search-container { position: relative; width: 100%; }
-        .search-container input { margin-bottom: 0; }
-        .suggestions-dropdown {
-            position: absolute; top: 100%; left: 0; right: 0;
-            background: white; border: 1px solid #ccc; border-top: none;
-            border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto;
-            margin: 0; padding: 0; list-style: none; z-index: 1000;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none;
-        }
-        .suggestions-dropdown li {
-            padding: 10px; cursor: pointer; border-bottom: 1px solid #eee;
-        }
-        .suggestions-dropdown li:hover { background-color: #f0f0f0; }
-        .suggestions-dropdown .no-results { color: #d32f2f; cursor: default; }
-        .suggestions-dropdown .no-results:hover { background-color: white; }
-    </style>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon" type="image/x-icon" href="../img/favicon.png">
 </head>
-<body>
-
-    <div class="container">
+<body class="bodybg">
+					
+  <div class="container">
+					
         <div class="header">
             <h2>Data Entry Form</h2>
-			<div class="header-buttons" id="navButtons">
-			<button class="btn-nav" onclick="window.location.href='view_donors.html'">View All Donors</button>
-			</div>
             <div class="header-buttons" id="navButtons">
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
         </div>
-
-        <!-- Quick Lookup with Live Suggestions -->
+		<center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center>
+		<!--
         <div class="search-box">
             <label style="margin-bottom: 10px; color:#333;">Quick Profile Lookup:</label>
             <div class="search-container">
@@ -84,14 +27,13 @@
             </div>
             <small id="searchStatus" style="color: #666; display: block; margin-top: 5px;">Loading contacts database...</small>
         </div>
-        
+        -->
         <div id="message"></div>
 
-        <!-- NEW DONOR FORM -->
         <form id="donorForm">
             <div class="form-group">
                 <label for="name">Full Name</label>
-                <input type="text" id="name" required placeholder="Name of the Donor">
+                <input type="text" id="name" required placeholder="Donor Name">
             </div>
             
             <div class="form-group">
@@ -109,22 +51,29 @@
                 </select>
             </div>
 
-            <!-- UPDATED: 10-Digit validation pattern -->
             <div class="form-group">
                 <label for="contact">Contact Number</label>
-                <input type="tel" id="contact" required placeholder="Enter Mobile Number" pattern="[0-9]{10}" maxlength="10" title="Contact number must be exactly 10 digits">
-                <small style="color: #666; display: block; margin-top: 5px;">Contact for enquiry if emergency or test results</small>
+                <input type="tel" id="contact" required placeholder="Mobile Number" pattern="[0-9]{10}" maxlength="10" title="Contact number must be exactly 10 digits">
+                <small style="color: #666; display: block; margin-top: 5px;">Contact for enquiry on BLOOD TEST RESULTS and further emergencies.</small>
             </div>
 
             <div class="form-group">
-                <label for="location">Address:</label>
-                <input type="text" id="location" required placeholder="Enter address of Donor">
+                <label for="campName">Donation Camp / Appointment</label>
+                <select id="campName" required>
+                    <option value="">Loading...</option>
+                </select>
+                <small style="color: #666; display: block; margin-top: 5px;">Selected based on your Host.</small>
             </div>
 
             <div class="form-group">
-                <label for="lastDonation">Last Donation Date</label>
-                <input type="date" id="lastDonation">
-                <small style="color: #666;">Leave blank if first-time donor.</small>
+                <label for="location">Address</label>
+                <input type="text" id="location" required placeholder="Address of Donor">
+            </div>
+
+            <div class="form-group">
+                <label for="lastDonation">Donation Date</label>
+                <input type="date" id="lastDonation" required>
+                <small style="color: #666;">Defaults to today's date.</small>
             </div>
 
             <button type="submit" class="btn-submit">Register Donor</button>
@@ -132,34 +81,172 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'UPLACEHOLDER';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwS2kfwhaNRWfhcskWi0PTzoHCHqzyHGo0vOVg8rKbFQGJwEv_3orDSHOJ7hXtcFJO36w/exec';
         const token = localStorage.getItem('token');
         const role = localStorage.getItem('role');
         
-        // Cache variable for live search
         let donorsCache = null;
 
-        // === ON PAGE LOAD: AUTHENTICATION CHECK ===
         window.onload = () => {
             if (!token) {
                 alert('Unauthorized access. Redirecting to login.');
-                window.location.href = 'index.html'; 
+                window.location.href = '../index.html'; 
                 return;
             }
 
-            if (role === 'OrganiserTo enforce exactly 10 digits for a contact number in HTML, use `type="tel"` combined with the `pattern`, `minlength`, and `maxlength` attributes. 
+            if (role === 'Organiser_user' || role === 'Master_admin') {
+                const navContainer = document.getElementById('navButtons');
+                const backBtn = document.createElement('button');
+                backBtn.className = 'btn-nav';
+                backBtn.textContent = 'Dashboard';
+                backBtn.onclick = () => window.location.href = (role === 'Organiser_user') ? 'organiser.html' : 'master.html';
+                navContainer.insertBefore(backBtn, navContainer.firstChild);
+            }
 
-Here is the exact HTML:
+            const navContainer = document.getElementById('navButtons');
+            const viewBtn = document.createElement('button');
+            viewBtn.className = 'btn-nav';
+            viewBtn.textContent = 'View All Donors';
+            viewBtn.onclick = () => window.location.href = 'view_donors.html';
+            navContainer.insertBefore(viewBtn, navContainer.firstChild);
 
-```html
-<label for="contact">Contact Number:</label>
-<input 
-  type="tel" 
-  id="contact" 
-  name="contact" 
-  pattern="[0-9]{10}" 
-  minlength="10" 
-  maxlength="10" 
-  title="Please enter exactly 10 digits" 
-  required
->
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('lastDonation').value = today;
+
+            fetchInitialData();
+        };
+
+        async function fetchInitialData() {
+            const statusText = document.getElementById('searchStatus');
+            
+            fetch(`${SCRIPT_URL}?action=getFormConfig&token=${token}`)
+                .then(res => res.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        const campSelect = document.getElementById('campName');
+                        campSelect.innerHTML = ''; 
+                        result.camps.forEach(camp => {
+                            const opt = document.createElement('option');
+                            opt.value = camp; opt.textContent = camp;
+                            campSelect.appendChild(opt);
+                        });
+                        if (result.defaultCamp && result.camps.includes(result.defaultCamp)) {
+                            campSelect.value = result.defaultCamp;
+                        }
+                    }
+                }).catch(err => console.error("Error loading camps", err));
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getAllDonors&token=${token}`);
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    donorsCache = result.donors;
+                    statusText.textContent = 'Ready: Start typing to search.';
+                    statusText.style.color = 'green';
+                } else {
+                    statusText.textContent = 'Search offline. Try reloading.';
+                    statusText.style.color = 'red';
+                }
+            } catch (error) {
+                statusText.textContent = 'Connection error. Search disabled.';
+                statusText.style.color = 'red';
+            }
+        }
+
+        const searchInput = document.getElementById('searchContact');
+        const suggestionsList = document.getElementById('suggestionsList');
+
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            suggestionsList.innerHTML = '';
+
+            if (query.length === 0 || !donorsCache) {
+                suggestionsList.style.display = 'none';
+                return;
+            }
+
+            const matches = donorsCache.filter(donor => 
+                donor.contact.toLowerCase().includes(query) || 
+                donor.name.toLowerCase().includes(query)
+            );
+
+            if (matches.length > 0) {
+                suggestionsList.style.display = 'block';
+                matches.forEach(donor => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<strong>${donor.contact}</strong> - ${donor.name} <em>(${donor.bloodGroup})</em>`;
+                    li.onclick = () => { window.location.href = `donor.html?id=${donor.id}`; };
+                    suggestionsList.appendChild(li);
+                });
+            } else {
+                suggestionsList.style.display = 'block';
+                const li = document.createElement('li');
+                li.className = 'no-results';
+                li.textContent = 'No matching contacts found';
+                suggestionsList.appendChild(li);
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target !== searchInput && e.target !== suggestionsList) {
+                suggestionsList.style.display = 'none';
+            }
+        });
+
+        document.getElementById('donorForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = 'Saving donor data...';
+            msgDiv.style.color = '#0056b3';
+
+            const payload = {
+                action: 'addDonor', token: token,
+                donorData: {
+                    name: document.getElementById('name').value.trim(),
+                    bloodGroup: document.getElementById('bloodGroup').value,
+                    contact: document.getElementById('contact').value.trim(),
+                    campName: document.getElementById('campName').value.trim(),
+                    location: document.getElementById('location').value.trim(),
+                    lastDonation: document.getElementById('lastDonation').value || 'Never'
+                }
+            };
+
+            try {
+                const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    msgDiv.innerHTML = `Success! Donor registered with ID: <strong>${result.id}</strong>`;
+                    msgDiv.style.color = 'green';
+                    
+                    document.getElementById('name').value = '';
+                    document.getElementById('contact').value = '';
+                    document.getElementById('location').value = '';
+                    document.getElementById('bloodGroup').selectedIndex = 0;
+                    
+                    if (donorsCache) {
+                        donorsCache.push({
+                            id: result.id, name: payload.donorData.name,
+                            contact: payload.donorData.contact,
+                            bloodGroup: payload.donorData.bloodGroup,
+                            campName: payload.donorData.campName
+                        });
+                    }
+                } else {
+                    msgDiv.textContent = 'Error: ' + result.message;
+                    msgDiv.style.color = 'red';
+                }
+            } catch (error) {
+                msgDiv.textContent = 'Connection failed. Check your network or Web App URL.';
+                msgDiv.style.color = 'red';
+            }
+        });
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../index.html'; 
+        }
+    </script>
+</body>
+</html>
