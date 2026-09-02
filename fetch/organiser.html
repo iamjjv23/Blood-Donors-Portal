@@ -4,95 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Organiser Dashboard | Blood Donation Portal</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif; background-color: #f4f7f6;
-            margin: 0; padding: 20px;
-        }
-        .container {
-            background-color: white; padding: 30px; border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; max-width: 900px;
-            margin: auto;
-        }
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;
-        }
-        h2 { margin: 0; color: #333; }
-        .btn-logout, .btn-nav {
-            background-color: #555; color: white; border: none;
-            padding: 8px 12px; border-radius: 4px; cursor: pointer;
-        }
-        .btn-nav { background-color: #0056b3; margin-right: 10px; }
-        .btn-nav:hover { background-color: #004494; }
-        
-        /* Active/Disabled Tab Button Styling */
-        .btn-nav.active-tab {
-            background-color: #9e9e9e; /* Grey color */
-            color: #f1f1f1;
-            cursor: not-allowed;
-            pointer-events: none; /* Prevents clicking entirely */
-        }
-        
-        /* Tab Sections */
-        .section { display: none; }
-        .section.active { display: block; }
-        
-        /* Summary Card Styles */
-        .summary-card {
-            border: 1px solid #e0e0e0; border-radius: 8px; padding: 40px;
-            text-align: center; background-color: #f9f9f9;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-top: 20px;
-        }
-        .summary-card h3 { margin: 0 0 10px 0; color: #555; font-size: 1.5rem; }
-        .stat-number { font-size: 4rem; font-weight: bold; color: #d32f2f; margin: 10px 0 20px 0; }
-        .view-link { display: inline-block; text-decoration: none; color: #0056b3; font-size: 1.1rem; font-weight: bold; }
-        .view-link:hover { text-decoration: underline; }
-        
-        /* Form Styles */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="password"], select {
-            width: 100%; padding: 10px; border: 1px solid #ccc;
-            border-radius: 4px; box-sizing: border-box;
-        }
-        .btn-submit {
-            background-color: #0056b3; color: white; border: none;
-            padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px;
-        }
-        .btn-submit:hover { background-color: #004494; }
-        #message { margin-bottom: 15px; font-weight: bold; }
-    </style>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon" type="image/x-icon" href="../img/favicon.png">
 </head>
-<body>
+<body class="bodybg">
 
     <div class="container">
-        <div class="header">
-            <h2>Organiser Dashboard</h2>
+	<center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center>
+        <div class="header" style="float: right;">
+            
             <div>
-                <button class="btn-nav" onclick="window.location.href='data_entry.html'">Go to Data Entry Form</button>
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
         </div>
         
         <div style="margin-bottom: 20px;">
-            <!-- Added tab-btn class and set Dashboard to active-tab by default -->
+		<h2>Organiser Dashboard</h2> <br>
             <button class="btn-nav tab-btn active-tab" onclick="showSection('donorSection', this)">Dashboard Overview</button>
             <button class="btn-nav tab-btn" onclick="showSection('userSection', this)">Add New User</button>
+			<button class="btn-nav" onclick="window.location.href='data_entry.html'">Data Entry Form</button>
         </div>
 
         <div id="message"></div>
 
-        <!-- DONOR SUMMARY SECTION -->
         <div id="donorSection" class="section active">
-            <div class="summary-card">
-                <h3>Total Registered Donors</h3>
-                <p class="stat-number" id="totalDonorsCount">...</p>
+            <div style="display: flex; justify-content: center;">
+                <div class="summary-card" style="width: 100%; max-width: 450px; background-color: #e8f4f8;">
+                    <h3>Donors registered:</h3>
+                    <p class="stat-number" id="teamDonorsCount" style="color: #0056b3;">...</p>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
                 <a href="view_donors.html" class="view-link">View Full Donor Database &rarr;</a>
             </div>
         </div>
 
-        <!-- ADD USER SECTION -->
         <div id="userSection" class="section">
             <h3>Create New User</h3>
             <form id="addUserForm">
@@ -108,7 +54,6 @@
                     <label>Role:</label>
                     <select id="newRole" required>
                         <option value="Data_entry_user">Data Entry User</option>
-                        <option value="Organiser_user">Organiser</option>
                     </select>
                 </div>
                 <button type="submit" class="btn-submit">Create User</button>
@@ -117,64 +62,44 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'UPLACEHOLDER';
-
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwS2kfwhaNRWfhcskWi0PTzoHCHqzyHGo0vOVg8rKbFQGJwEv_3orDSHOJ7hXtcFJO36w/exec';
         const token = localStorage.getItem('token');
         const role = localStorage.getItem('role');
 
-        // === AUTHENTICATION CHECK ===
         window.onload = () => {
             if (!token || (role !== 'Organiser_user' && role !== 'Master_admin')) {
                 alert('Unauthorized access. Redirecting to login.');
-                window.location.href = 'index.html'; 
+                window.location.href = '../index.html'; 
             } else {
                 fetchDonorCount();
             }
         };
 
-        // === TAB NAVIGATION LOGIC (UPDATED) ===
         function showSection(sectionId, clickedBtn) {
-            // Hide all sections
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-            // Show target section
             document.getElementById(sectionId).classList.add('active');
-            
-            // Remove 'active-tab' (grey/disabled state) from all tab buttons
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active-tab'));
-            // Add 'active-tab' strictly to the button just clicked
             clickedBtn.classList.add('active-tab');
-
-            // Clear any old form messages
             document.getElementById('message').textContent = '';
         }
 
-        // === FETCH DONORS & COUNT (GET REQUEST) ===
         async function fetchDonorCount() {
-            const countDisplay = document.getElementById('totalDonorsCount');
-            const msgDiv = document.getElementById('message');
-            
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getAllDonors&token=${token}`);
+                const response = await fetch(`${SCRIPT_URL}?action=getStats&token=${token}`);
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    countDisplay.textContent = result.donors.length;
+                    document.getElementById('teamDonorsCount').textContent = result.teamCount;
                 } else {
-                    countDisplay.textContent = 'Error';
-                    msgDiv.textContent = 'Error: ' + result.message;
-                    msgDiv.style.color = 'red';
+                    document.getElementById('message').textContent = 'Error: ' + result.message;
                 }
             } catch (error) {
-                countDisplay.textContent = 'Offline';
-                msgDiv.textContent = 'Connection error while fetching data.';
-                msgDiv.style.color = 'red';
+                document.getElementById('message').textContent = 'Connection error while fetching data.';
             }
         }
 
-        // === ADD USER (POST REQUEST) ===
         document.getElementById('addUserForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const msgDiv = document.getElementById('message');
             msgDiv.textContent = 'Creating user...';
             msgDiv.style.color = '#0056b3';
@@ -190,11 +115,7 @@
             };
 
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                
+                const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await response.json();
 
                 if (result.status === 'success') {
@@ -211,10 +132,9 @@
             }
         });
 
-        // === LOGOUT ===
         function logout() {
             localStorage.clear();
-            window.location.href = 'index.html';
+            window.location.href = '../index.html';
         }
     </script>
 </body>
