@@ -4,62 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Blood Donation Portal</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .login-container {
-            background-color: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 350px;
-        }
-        h2 { text-align: center; color: #333; margin-top: 0; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
-        input[type="text"], input[type="password"] {
-            width: 100%; padding: 10px; border: 1px solid #ccc;
-            border-radius: 4px; box-sizing: border-box;
-        }
-        .btn-submit {
-            background-color: #d32f2f; color: white; border: none;
-            padding: 12px; border-radius: 4px; cursor: pointer;
-            width: 100%; font-size: 16px; font-weight: bold;
-        }
-        .btn-submit:hover { background-color: #b71c1c; }
-        #message { margin-bottom: 15px; text-align: center; font-weight: bold; }
-    </style>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/x-icon" href="img/favicon.png">
 </head>
-<body>
+<body class="loginbg">
+		
+  <div class="muck-up">
+ 
+		<div class="overlay"></div>
+			<div class="content">
+				
+					<div class="logo">
+					<img class="logoimg" src="img/dpl.png" alt="Logo">
+					</div>
+				
+			<div class="login">
+					<p class="loginhead">Blood Donor's Portal Login</p>
+					<div id="message"></div>
+					<form id="loginForm">
+						<div class="form-group">
+							<label class="logintext" for="username">Username</label>
+							<input type="text" id="username" required>
+						</div>
+						
+						<div class="form-group">
+						<label class="logintext" for="password">Password</label>
+						<input type="password" id="password" required>
+						</div>
+						
+						<button type="submit" class="btn-submit">Sign In</button>
+					</form>
+					
 
-    <div class="login-container">
-        <h2>Portal Login</h2>
-        <div id="message"></div>
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" required>
-            </div>
-            <button type="submit" class="btn-submit">Sign In</button>
-        </form>
-    </div>
+				</div>
+			</div>
+		</div>
+	</div>
+		
+		
+    
 
     <script>
-        const SCRIPT_URL = 'UPLACEHOLDER';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwS2kfwhaNRWfhcskWi0PTzoHCHqzyHGo0vOVg8rKbFQGJwEv_3orDSHOJ7hXtcFJO36w/exec';
 
-        // Clear any old sessions on load
         window.onload = () => localStorage.clear();
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -86,18 +73,16 @@
                     msgDiv.textContent = 'Login successful! Redirecting...';
                     msgDiv.style.color = 'green';
                     
-                    // Save session data securely in the browser
                     localStorage.setItem('token', result.token);
                     localStorage.setItem('role', result.role);
                     localStorage.setItem('userId', result.userId);
 
-                    // Redirect based on Role
                     if (result.role === 'Master_admin') {
-                        window.location.href = 'master.html';
+                        window.location.href = 'fetch/master.html';
                     } else if (result.role === 'Organiser_user') {
-                        window.location.href = 'organiser.html';
+                        window.location.href = 'fetch/organiser.html';
                     } else if (result.role === 'Data_entry_user') {
-                        window.location.href = 'data_entry.html';
+                        window.location.href = 'fetch/data_entry.html';
                     } else {
                         msgDiv.textContent = 'Unknown role assigned.';
                         msgDiv.style.color = 'red';
