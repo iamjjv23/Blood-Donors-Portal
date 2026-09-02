@@ -219,7 +219,7 @@
 
         async function fetchMasterStats() {
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getStats&token=${token}`);
+                const response = await fetch(`${API}?action=getStats&token=${token}`);
                 const result = await response.json();
 
                 if (result.status === 'success') {
