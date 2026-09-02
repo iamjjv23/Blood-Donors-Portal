@@ -119,7 +119,7 @@
         async function fetchInitialData() {
             const statusText = document.getElementById('searchStatus');
             
-            fetch(`${SCRIPT_URL}?action=getFormConfig&token=${token}`)
+            fetch(`${API}?action=getFormConfig&token=${token}`)
                 .then(res => res.json())
                 .then(result => {
                     if (result.status === 'success') {
@@ -137,7 +137,7 @@
                 }).catch(err => console.error("Error loading camps", err));
 
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getAllDonors&token=${token}`);
+                const response = await fetch(`${API}?action=getAllDonors&token=${token}`);
                 const result = await response.json();
 
                 if (result.status === 'success') {
@@ -213,7 +213,7 @@
             };
 
             try {
-                const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const response = await fetch(API, { method: 'POST', body: JSON.stringify(payload) });
                 const result = await response.json();
 
                 if (result.status === 'success') {
