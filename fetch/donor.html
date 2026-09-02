@@ -75,7 +75,7 @@
             const card = document.getElementById('profileCard');
             
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getDonor&id=${donorId}&token=${token}`);
+                const response = await fetch(`${API}?action=getDonor&id=${donorId}&token=${token}`);
                 const result = await response.json();
 
                 if (result.status === 'success') {
