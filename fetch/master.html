@@ -4,125 +4,595 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Master Admin Dashboard | Blood Donation Portal</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif; background-color: #f4f7f6;
-            margin: 0; padding: 20px; display: flex; justify-content: center;
-        }
-        .container {
-            background-color: white; padding: 30px; border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; max-width: 500px;
-        }
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;
-        }
-        h2 { margin: 0; color: #333; }
-        .btn-logout {
-            background-color: #555; color: white; border: none;
-            padding: 8px 12px; border-radius: 4px; cursor: pointer;
-        }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
-        input[type="text"] {
-            width: 100%; padding: 10px; border: 1px solid #ccc;
-            border-radius: 4px; box-sizing: border-box;
-        }
-        .btn-submit {
-            background-color: #0056b3; color: white; border: none;
-            padding: 10px 15px; border-radius: 4px; cursor: pointer;
-            width: 100%; font-size: 16px;
-        }
-        .btn-submit:hover { background-color: #004494; }
-        #message { margin-bottom: 15px; font-weight: bold; text-align: center; }
-    </style>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon" type="image/x-icon" href="../img/favicon.png">
 </head>
-<body>
+<body class="bodybg">
 
-    <div class="container">
+    <div class="container" style="max-width: 900px;">
+	<center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center>
         <div class="header">
-            <h2>System Settings</h2>
+            <h2>Master Dashboard</h2>
             <button class="btn-logout" onclick="logout()">Logout</button>
         </div>
         
-        <div id="message"></div>
+        <div style="margin-bottom: 20px;">
+            <button class="btn-nav tab-btn active-tab" onclick="showSection('overviewSection', this)">System Overview</button>
+            <button class="btn-nav tab-btn" onclick="showSection('manageSection', this)">Manage Organisers</button>
+            <button class="btn-nav tab-btn" onclick="showSection('campsSection', this)">Manage Camps</button>
+            <button class="btn-nav tab-btn" onclick="showSection('settingsSection', this)">Database Settings</button>
+        </div>
 
-        <form id="settingsForm">
-            <div class="form-group">
-                <label for="donorSheetId">Donor Database Sheet ID:</label>
-                <input type="text" id="donorSheetId" required placeholder="e.g., 1aBcDeFgHiJkLmNoPqRsTuVwXyZ...">
-                <small style="color: #666; display: block; margin-top: 5px;">
-                    Enter the long ID found in the URL of your secondary Donor Google Sheet.
-                </small>
+        <div id="message" style="margin-bottom: 15px; font-weight: bold; text-align: center;"></div>
+
+        <div id="overviewSection" class="section active">
+            <div class="card-container">
+                <div class="big-button-card card-donors" onclick="window.location.href='view_donors.html'">
+                    <h3 style="color: #333; margin:0; font-size: 1.3rem;">Total Donors</h3>
+                    <p class="stat-number" id="masterTotalDonors" style="color: #d32f2f;">...</p>
+                    <span style="color: #d32f2f; font-weight:bold;">View Full Database &rarr;</span>
+                </div>
+                <div class="big-button-card card-orgs" onclick="showHierarchySection()">
+                    <h3 style="color: #333; margin:0; font-size: 1.3rem;">Total Organisers</h3>
+                    <p class="stat-number" id="masterTotalOrgs" style="color: #0056b3;">...</p>
+                    <span style="color: #0056b3; font-weight:bold;">View Full Hierarchy &rarr;</span>
+                </div>
             </div>
-            <button type="submit" class="btn-submit">Update Configuration</button>
-        </form>
+
+            <div class="stats-box" style="margin-top: 30px;">
+                <h3 style="margin-top: 0; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px;">Entries by Organiser Team</h3>
+                <p style="color: #666; margin-bottom: 15px;">Click on any team to view their detailed data entry entries.</p>
+                <ul class="org-list" id="orgStatsList">
+                    <li><em>Loading data...</em></li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="orgHierarchySection" class="section">
+            <button class="btn-back-hierarchy" onclick="showSection('overviewSection', document.querySelectorAll('.tab-btn')[0])">&larr; Back to Overview</button>
+            <div class="stats-box">
+                <h3 style="margin-top:0; color: #0056b3;">Organiser Team Hierarchy</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>Organiser Name</th><th>Data Entry Users</th><th>Total Entries</th></tr>
+                        </thead>
+                        <tbody id="hierarchyTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="deBreakdownSection" class="section">
+            <button class="btn-back-hierarchy" onclick="showSection('overviewSection', document.querySelectorAll('.tab-btn')[0])">&larr; Back to Dashboard</button>
+            <div class="stats-box">
+                <h3 style="margin-top:0; color: #d32f2f;" id="breakdownTitle">Team Entries</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>User</th><th>Entries Completed</th></tr></thead>
+                        <tbody id="breakdownTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="individualDonorsSection" class="section">
+            <button class="btn-back-hierarchy" id="btnBackToBreakdown">&larr; Back to Team Entries</button>
+            <div class="stats-box">
+                <h3 style="margin-top:0; color: #28a745;" id="individualDonorsTitle">Entries by User</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr><th>Name</th><th>Blood Group</th><th>Contact</th><th>Location</th><th>Camp Name</th><th>Status</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="individualDonorsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="manageSection" class="section">
+            <div class="stats-box" style="background-color: #f8f9fa;">
+                <h3 id="orgFormTitle" style="margin-top: 0;">Add New Organiser</h3>
+                <form id="orgForm">
+                    <input type="hidden" id="orgId"> 
+                    <div class="form-group">
+                        <label>Username:</label>
+                        <input type="text" id="orgUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password:</label>
+                        <input type="text" id="orgPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Assign Default Camp:</label>
+                        <select id="orgDefaultCamp" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                            <option value="General">General</option>
+                        </select>
+                        <small style="color: #666; display: block; margin-top: 5px;">This will be the default camp for this Organiser and their team.</small>
+                    </div>
+                    <button type="submit" class="btn-submit" id="orgSubmitBtn">Create Organiser</button>
+                    <button type="button" class="btn-logout" id="orgCancelBtn" style="display:none; width: 100%; margin-top: 10px;" onclick="resetOrgForm()">Cancel Edit</button>
+                </form>
+            </div>
+
+            <h3>Existing Organisers</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Password</th>
+                            <th>Default Camp</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orgTableBody">
+                        <tr><td colspan="4">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="settingsSection" class="section">
+            <div class="stats-box">
+                <form id="settingsForm">
+                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color: #333; margin-top:0;">Connect Database</h3>
+                    <div class="form-group">
+                        <label for="donorSheetId">Donor Database:</label>
+                        <input type="text" id="donorSheetId" required placeholder="API url should come here">
+                        <small style="color: #666; display: block; margin-top: 5px;">Enter the API of your Database.</small>
+                    </div>
+                    <button type="submit" class="btn-submit">Save Database Configuration</button>
+                </form>
+            </div>
+        </div>
+        
+        <div id="campsSection" class="section">
+            <div class="stats-box" style="background-color: #f8f9fa;">
+                <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color: #333; margin-top:0;">Register Camps</h3>
+                <p style="color: #666; margin-bottom: 15px;">These are available to select as Camps dropdown.</p>
+                <div style="display:flex; gap:10px; margin-bottom: 15px;">
+                    <input type="text" id="newCampInput" placeholder="Enter new camp name..." style="flex:1; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                    <button type="button" class="btn-submit" style="width: auto; background-color: #0056b3;" onclick="addCamp()">Add New Camp</button>
+                </div>
+            </div>
+
+            <div class="stats-box">
+                <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color: #333; margin-top:0;">Assign Default Camp for Organiser</h3>
+                <p style="color: #666; margin-bottom: 15px;">Quickly re-assign an existing Organiser's team to a different default camp.</p>
+                <div style="display:flex; gap:10px; margin-bottom: 15px; align-items: flex-end;">
+                    <div style="flex:1;">
+                        <label style="font-weight:bold; margin-bottom:5px; display:block;">Select Organiser:</label>
+                        <select id="assignOrgSelect" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;"></select>
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-weight:bold; margin-bottom:5px; display:block;">Select Default Camp:</label>
+                        <select id="assignCampSelect" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;"></select>
+                    </div>
+                    <button type="button" class="btn-submit" style="width: auto; background-color:#28a745;" onclick="assignDefaultCamp()">Assign Default</button>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Active Camps</th><th style="width:150px;">Actions</th></tr></thead>
+                    <tbody id="campsTableBody">
+                        <tr><td colspan="2">Loading camps...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div> 
     </div>
 
     <script>
-        const SCRIPT_URL = 'UPLACEHOLDER';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwS2kfwhaNRWfhcskWi0PTzoHCHqzyHGo0vOVg8rKbFQGJwEv_3orDSHOJ7hXtcFJO36w/exec';
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        
+        let globalHierarchy = {}; 
+        let masterCamps = ['General'];
+        let masterOrganisers = [];
 
-        // === ON PAGE LOAD: AUTHENTICATION CHECK ===
         window.onload = () => {
-            const token = localStorage.getItem('token');
-            const role = localStorage.getItem('role');
-
             if (!token || role !== 'Master_admin') {
-                alert('Unauthorized access. Redirecting to login.');
-                // Looks in the current folder for index.html
-                window.location.href = 'index.html'; 
+                alert('Unauthorized access.');
+                window.location.href = '../index.html'; 
+            } else {
+                fetchMasterStats();
+                fetchMasterConfig(); 
             }
         };
 
-        // === FORM SUBMISSION HANDLER ===
-        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        function showSection(sectionId, clickedBtn) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
             
-            const msgDiv = document.getElementById('message');
-            const donorSheetId = document.getElementById('donorSheetId').value.trim();
-            const token = localStorage.getItem('token');
+            if(clickedBtn) {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active-tab'));
+                clickedBtn.classList.add('active-tab');
+            }
+            document.getElementById('message').textContent = '';
 
-            msgDiv.textContent = 'Updating settings securely...';
-            msgDiv.style.color = '#0056b3';
+            if(sectionId === 'manageSection') fetchOrganisersList();
+        }
 
-            const payload = {
-                action: 'updateSettings',
-                token: token,
-                settingsData: [
-                    { key: 'Donor_Sheet_ID', value: donorSheetId }
-                ]
-            };
-
+        async function fetchMasterStats() {
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                
+                const response = await fetch(`${SCRIPT_URL}?action=getStats&token=${token}`);
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    msgDiv.textContent = 'Success: Database link updated!';
+                    document.getElementById('masterTotalDonors').textContent = result.totalDonors;
+                    globalHierarchy = result.hierarchyStats;
+                    
+                    const listObj = document.getElementById('orgStatsList');
+                    listObj.innerHTML = ''; 
+                    let orgCount = 0;
+
+                    for (const [orgId, data] of Object.entries(globalHierarchy)) {
+                        if (orgId === 'master') {
+                            if (data.totalDonors > 0) {
+                                listObj.innerHTML += `
+                                    <li style="background-color: #f8f9fa;">
+                                        <span style="color: #555; font-weight: bold;">${data.orgName}</span>
+                                        <span class="org-count">${data.totalDonors} donors</span>
+                                    </li>`;
+                            }
+                        } else {
+                            orgCount++;
+                            listObj.innerHTML += `
+                                <li title="Click to view team details" onclick="showBreakdownSection('${orgId}')">
+                                    <span class="org-link">${data.orgName}</span>
+                                    <span class="org-count">${data.totalDonors} donors</span>
+                                </li>`;
+                        }
+                    }
+                    document.getElementById('masterTotalOrgs').textContent = orgCount;
+                }
+            } catch (error) {
+                document.getElementById('message').textContent = 'Failed to load stats.';
+                document.getElementById('message').style.color = 'red';
+            }
+        }
+
+        function showHierarchySection() {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('orgHierarchySection').classList.add('active');
+            const tbody = document.getElementById('hierarchyTableBody');
+            tbody.innerHTML = '';
+            
+            for (const [orgId, data] of Object.entries(globalHierarchy)) {
+                if (orgId === 'master' && data.totalDonors === 0) continue;
+                tbody.innerHTML += `
+                    <tr class="hover-row" onclick="showBreakdownSection('${orgId}')">
+                        <td><strong>${data.orgName}</strong></td>
+                        <td>${data.deCount} Data Entry Users</td>
+                        <td style="color: #d32f2f; font-weight: bold;">${data.totalDonors} Entries</td>
+                    </tr>`;
+            }
+        }
+
+        function showBreakdownSection(orgId) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('deBreakdownSection').classList.add('active');
+            
+            const data = globalHierarchy[orgId];
+            document.getElementById('breakdownTitle').textContent = `Team Entries: ${data.orgName}`;
+            
+            const tbody = document.getElementById('breakdownTableBody');
+            tbody.innerHTML = '';
+
+            data.breakdownArray.forEach(user => {
+                if (user.name === '[Organiser Direct Entry]' && user.count === 0) return;
+                if (user.name === '[Master Direct]' && user.count === 0) return;
+
+                let displayName = user.name;
+                if (user.name === '[Organiser Direct Entry]') displayName = '<em>Organiser (Direct Entry)</em>';
+                if (user.name === '[Master Direct]') displayName = '<em>Master Admin (Direct Entry)</em>';
+
+                const safeName = user.name.replace(/'/g, "\\'");
+                tbody.innerHTML += `
+                    <tr class="hover-row" onclick="fetchUserDonors('${user.userId}', '${safeName}', '${orgId}')">
+                        <td><strong>${displayName}</strong></td>
+                        <td style="color: #d32f2f; font-weight: bold;">${user.count}</td>
+                    </tr>`;
+            });
+        }
+
+        async function fetchUserDonors(targetUserId, rawName, orgId) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('individualDonorsSection').classList.add('active');
+            
+            let displayName = rawName;
+            if (rawName === '[Organiser Direct Entry]') displayName = 'Organiser (Direct Entry)';
+            if (rawName === '[Master Direct]') displayName = 'Master Admin (Direct Entry)';
+            
+            document.getElementById('individualDonorsTitle').textContent = `Entries logged by: ${displayName}`;
+            document.getElementById('btnBackToBreakdown').onclick = () => showBreakdownSection(orgId);
+            
+            const tbody = document.getElementById('individualDonorsTableBody');
+            tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
+            
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getDonorsByUserId&targetUserId=${targetUserId}&token=${token}`);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    tbody.innerHTML = '';
+                    if (result.donors.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No donors entered by this user.</td></tr>';
+                        return;
+                    }
+                    result.donors.forEach(donor => {
+                        tbody.innerHTML += `<tr>
+                            <td><strong>${donor.name}</strong></td>
+                            <td><span class="blood-badge">${donor.bloodGroup}</span></td>
+                            <td>${donor.contact}</td>
+                            <td>${donor.location}</td>
+                            <td>${donor.campName || 'General'}</td>
+                            <td style="color: ${donor.status === 'Active' ? 'green' : 'orange'}; font-weight: bold;">${donor.status}</td>
+                            <td><a href="donor.html?id=${donor.id}" class="btn-view">View Profile</a></td>
+                        </tr>`;
+                    });
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="7" style="color:red">Failed to load individual data.</td></tr>';
+            }
+        }
+
+        async function fetchMasterConfig() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getMasterConfig&token=${token}`);
+                const result = await response.json();
+                if(result.status === 'success') {
+                    masterCamps = result.camps;
+                    masterOrganisers = result.organisers;
+                    
+                    renderCampsUI();
+                    populateCampDropdowns();
+                }
+            } catch (e) { console.error('Error fetching config data.'); }
+        }
+
+        function renderCampsUI() {
+            const tbody = document.getElementById('campsTableBody');
+            tbody.innerHTML = '';
+            masterCamps.forEach((camp, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${camp}</strong></td>
+                        <td>
+                            <button class="btn-sm btn-edit" onclick="editCamp(${index})">Edit</button>
+                            <button class="btn-sm btn-delete" onclick="deleteCamp(${index})">Delete</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function populateCampDropdowns() {
+            const selects = [document.getElementById('orgDefaultCamp'), document.getElementById('assignCampSelect')];
+            selects.forEach(select => {
+                if(!select) return;
+                select.innerHTML = '';
+                masterCamps.forEach(camp => { select.innerHTML += `<option value="${camp}">${camp}</option>`; });
+            });
+
+            const orgSelect = document.getElementById('assignOrgSelect');
+            if(orgSelect) {
+                orgSelect.innerHTML = '';
+                masterOrganisers.forEach(org => { orgSelect.innerHTML += `<option value="${org.id}">${org.username}</option>`; });
+            }
+        }
+
+        async function addCamp() {
+            const val = document.getElementById('newCampInput').value.trim();
+            if(!val) return;
+            if(masterCamps.includes(val)) return alert("Camp already exists!");
+            
+            masterCamps.push(val);
+            document.getElementById('newCampInput').value = '';
+            await saveCampsToServer();
+        }
+
+        async function editCamp(index) {
+            const oldName = masterCamps[index];
+            const newName = prompt("Edit camp name:", oldName);
+            if(!newName || newName.trim() === "" || newName === oldName) return;
+            if(masterCamps.includes(newName)) return alert("Camp name already exists!");
+            
+            masterCamps[index] = newName.trim();
+            await saveCampsToServer();
+        }
+
+        async function deleteCamp(index) {
+            if(!confirm("Delete this camp from the master list?")) return;
+            masterCamps.splice(index, 1);
+            if(masterCamps.length === 0) masterCamps = ['General']; 
+            await saveCampsToServer();
+        }
+
+        async function saveCampsToServer() {
+            const payload = { action: 'updateCamps', token: token, camps: masterCamps };
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = 'Saving camps database...';
+            msgDiv.style.color = '#0056b3';
+            
+            try {
+                const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                if(result.status === 'success') {
+                    msgDiv.textContent = 'Camps updated securely.';
                     msgDiv.style.color = 'green';
-                    document.getElementById('settingsForm').reset();
+                    setTimeout(()=> msgDiv.textContent='', 3000);
+                    renderCampsUI();
+                    populateCampDropdowns(); 
+                }
+            } catch(e) { alert('Connection failed.'); }
+        }
+
+        async function assignDefaultCamp() {
+            const orgId = document.getElementById('assignOrgSelect').value;
+            const campName = document.getElementById('assignCampSelect').value;
+            if(!orgId || !campName) return;
+            
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = 'Assigning default routing...';
+            msgDiv.style.color = '#0056b3';
+
+            const payload = { action: 'assignCamp', token: token, orgId: orgId, campName: campName };
+            try {
+                const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                if(result.status === 'success') {
+                    msgDiv.textContent = 'Default camp successfully assigned to team.';
+                    msgDiv.style.color = 'green';
+                    setTimeout(()=> msgDiv.textContent='', 3000);
+                    
+                    const org = masterOrganisers.find(o => o.id === orgId);
+                    if(org) org.defaultCamp = campName;
+                    fetchOrganisersList(); 
+                }
+            } catch(e) { alert('Connection failed.'); }
+        }
+
+        async function fetchOrganisersList() {
+            const tbody = document.getElementById('orgTableBody');
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getOrganisers&token=${token}`);
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    tbody.innerHTML = '';
+                    if (result.organisers.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No organisers found.</td></tr>';
+                        return;
+                    }
+                    result.organisers.forEach(org => {
+                        const safeId = org.id.replace(/'/g, "\\'");
+                        const safeUser = org.username.replace(/'/g, "\\'");
+                        const safePass = org.password.replace(/'/g, "\\'");
+                        const safeCamp = org.defaultCamp.replace(/'/g, "\\'");
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><strong>${org.username}</strong></td>
+                                <td>${org.password}</td>
+                                <td style="color:#0056b3; font-weight:bold;">${org.defaultCamp}</td>
+                                <td>
+                                    <button class="btn-sm btn-edit" onclick="triggerEdit('${safeId}', '${safeUser}', '${safePass}', '${safeCamp}')">Edit</button>
+                                    <button class="btn-sm btn-delete" onclick="deleteOrganiser('${safeId}')">Delete</button>
+                                </td>
+                            </tr>`;
+                    });
+                }
+            } catch (error) { tbody.innerHTML = '<tr><td colspan="4" style="color:red">Error loading organisers.</td></tr>'; }
+        }
+
+        document.getElementById('orgForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msgDiv = document.getElementById('message');
+            const orgId = document.getElementById('orgId').value;
+            const username = document.getElementById('orgUsername').value.trim();
+            const password = document.getElementById('orgPassword').value;
+            const defaultCamp = document.getElementById('orgDefaultCamp').value; 
+
+            msgDiv.textContent = orgId ? 'Updating organiser...' : 'Creating organiser...';
+            msgDiv.style.color = '#0056b3';
+
+            const actionType = orgId ? 'editUser' : 'addUser';
+            const payload = { action: actionType, token: token, userData: { username, password, defaultCamp } };
+            
+            if (orgId) payload.userData.id = orgId;
+            else payload.userData.role = 'Organiser_user';
+
+            try {
+                const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    msgDiv.textContent = orgId ? 'Organiser updated successfully!' : 'Organiser created successfully!';
+                    msgDiv.style.color = 'green';
+                    resetOrgForm();
+                    fetchOrganisersList(); 
+                    fetchMasterConfig(); 
                 } else {
                     msgDiv.textContent = 'Error: ' + result.message;
                     msgDiv.style.color = 'red';
                 }
             } catch (error) {
-                msgDiv.textContent = 'Connection failed. Check your Web App URL.';
+                msgDiv.textContent = 'Connection failed.';
                 msgDiv.style.color = 'red';
-                console.error(error);
             }
         });
 
-        // === LOGOUT LOGIC ===
+        function triggerEdit(id, username, password, camp) {
+            document.getElementById('orgId').value = id;
+            document.getElementById('orgUsername').value = username;
+            document.getElementById('orgPassword').value = password;
+            document.getElementById('orgDefaultCamp').value = camp; 
+            document.getElementById('orgFormTitle').textContent = 'Edit Organiser';
+            document.getElementById('orgSubmitBtn').textContent = 'Update Details';
+            document.getElementById('orgCancelBtn').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' }); 
+        }
+
+        function resetOrgForm() {
+            document.getElementById('orgForm').reset();
+            document.getElementById('orgId').value = '';
+            document.getElementById('orgFormTitle').textContent = 'Add New Organiser';
+            document.getElementById('orgSubmitBtn').textContent = 'Create Organiser';
+            document.getElementById('orgCancelBtn').style.display = 'none';
+        }
+
+        async function deleteOrganiser(id) {
+            if (!confirm('Are you sure you want to delete this Organiser? They will no longer be able to log in.')) return;
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = 'Deleting organiser...';
+            msgDiv.style.color = '#0056b3';
+
+            const payload = { action: 'deleteUser', token: token, userId: id };
+            try {
+                const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    msgDiv.textContent = 'Organiser deleted successfully.';
+                    msgDiv.style.color = 'green';
+                    fetchOrganisersList();
+                    fetchMasterStats();
+                } else {
+                    msgDiv.textContent = 'Error: ' + result.message;
+                    msgDiv.style.color = 'red';
+                }
+            } catch (error) {
+                msgDiv.textContent = 'Connection failed.';
+                msgDiv.style.color = 'red';
+            }
+        }
+
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!confirm("Are you sure you want to change the database configuration?\n\nThis will redirect all donor read/write operations to a different Google Sheet.")) return;
+
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = 'Updating settings securely...';
+            msgDiv.style.color = '#0056b3';
+
+            const payload = { action: 'updateSettings', token: token, settingsData: [{ key: 'Donor_Sheet_ID', value: document.getElementById('donorSheetId').value.trim() }] };
+
+            try {
+                const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    msgDiv.textContent = 'Success: Database link updated!';
+                    msgDiv.style.color = 'green';
+                    document.getElementById('settingsForm').reset();
+                }
+            } catch (error) { msgDiv.textContent = 'Connection failed.'; msgDiv.style.color = 'red'; }
+        });
+
         function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('role');
-            localStorage.removeItem('userId');
-            // Looks in the current folder for index.html
-            window.location.href = 'index.html'; 
+            localStorage.clear();
+            window.location.href = '../index.html'; 
         }
     </script>
 </body>
