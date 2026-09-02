@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organiser Details | Blood Donation Portal</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon" type="image/x-icon" href="../img/favicon.png">
+</head>
+<body class="bodybg">
+    
+    <div class="container" style="max-width: 1000px;">
+        <div class="header">
+            <h2>Organiser Team Records</h2>
+            <div>
+                <button class="btn-nav" onclick="window.location.href='master.html'">&larr; Back to Master</button>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+        
+        <div class="org-header">
+            <h3>Team: <span id="displayOrgName">Loading...</span></h3>
+        </div>
+
+        <div id="message">Loading database records...</div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Blood Group</th>
+                        <th>Contact</th>
+                        <th>Location</th>
+                        <th>Camp Name</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="donorTableBody">
+                    <!-- Data will be injected here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwS2kfwhaNRWfhcskWi0PTzoHCHqzyHGo0vOVg8rKbFQGJwEv_3orDSHOJ7hXtcFJO36w/exec';
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+
+        window.onload = () => {
+            if (!token || role !== 'Master_admin') {
+                alert('Unauthorized access. Redirecting to login.');
+                window.location.href = '../index.html'; 
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const orgName = urlParams.get('name');
+
+            if (!orgName) {
+                document.getElementById('message').textContent = 'Error: No Organiser specified in the URL.';
+                document.getElementById('message').style.color = 'red';
+                document.getElementById('displayOrgName').textContent = 'Unknown';
+            } else {
+                document.getElementById('displayOrgName').textContent = orgName;
+                fetchOrganiserDonors(orgName);
+            }
+        };
+
+        async function fetchOrganiserDonors(orgName) {
+            const tableBody = document.getElementById('donorTableBody');
+            const msgDiv = document.getElementById('message');
+            
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getOrganiserDonors&orgName=${encodeURIComponent(orgName)}&token=${token}`);
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    msgDiv.style.display = 'none'; 
+                    tableBody.innerHTML = '';
+                    
+                    if (result.donors.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No donors found for this team.</td></tr>';
+                        return;
+                    }
+
+                    result.donors.forEach(donor => {
+                        const row = `<tr>
+                            <td><strong>${donor.name}</strong></td>
+                            <td><span class="blood-badge">${donor.bloodGroup}</span></td>
+                            <td>${donor.contact}</td>
+                            <td>${donor.location}</td>
+                            <td>${donor.campName || 'General'}</td>
+                            <td style="color: ${donor.status === 'Active' ? 'green' : 'orange'}; font-weight: bold;">
+                                ${donor.status}
+                            </td>
+                            <td><a href="donor.html?id=${donor.id}" class="btn-view">View Profile</a></td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                } else {
+                    msgDiv.textContent = 'Error: ' + result.message;
+                    msgDiv.style.color = 'red';
+                }
+            } catch (error) {
+                msgDiv.textContent = 'Connection error while fetching data.';
+                msgDiv.style.color = 'red';
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../index.html';
+        }
+    </script>
+</body>
+</html>
