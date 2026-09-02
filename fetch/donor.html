@@ -4,48 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Donor Profile | Blood Donation Portal</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif; background-color: #f4f7f6;
-            margin: 0; padding: 20px; display: flex; justify-content: center;
-        }
-        .container {
-            background-color: white; padding: 30px; border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; max-width: 600px;
-        }
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;
-        }
-        h2 { margin: 0; color: #333; }
-        .btn-back {
-            background-color: #6c757d; color: white; border: none;
-            padding: 8px 12px; border-radius: 4px; cursor: pointer; text-decoration: none;
-        }
-        .btn-back:hover { background-color: #5a6268; }
-        
-        .profile-card {
-            border: 1px solid #ddd; border-radius: 6px; padding: 20px;
-            background-color: #fafafa; display: none; /* Hidden until data loads */
-        }
-        .blood-group-badge {
-            display: inline-block; background-color: #d32f2f; color: white;
-            padding: 10px 15px; border-radius: 50%; font-size: 24px; font-weight: bold;
-            text-align: center; margin-bottom: 15px;
-        }
-        .detail-row {
-            display: flex; border-bottom: 1px solid #eee; padding: 10px 0;
-        }
-        .detail-row:last-child { border-bottom: none; }
-        .detail-label { width: 40%; font-weight: bold; color: #555; }
-        .detail-value { width: 60%; color: #333; }
-        
-        #message { font-weight: bold; text-align: center; margin-bottom: 15px; }
-    </style>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon" type="image/x-icon" href="../img/favicon.png">
 </head>
-<body>
+<body class="bodybg">
 
     <div class="container">
+	<center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center>
         <div class="header">
             <h2>Donor Profile</h2>
             <button class="btn-back" onclick="goBack()">&larr; Back</button>
@@ -53,7 +18,6 @@
         
         <div id="message">Loading donor details...</div>
 
-        <!-- DONOR DETAILS CARD -->
         <div class="profile-card" id="profileCard">
             <div style="text-align: center;">
                 <div class="blood-group-badge" id="lblBloodGroup">--</div>
@@ -84,20 +48,17 @@
     </div>
 
     <script>
-       const SCRIPT_URL = 'UPLACEHOLDER';
-
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwS2kfwhaNRWfhcskWi0PTzoHCHqzyHGo0vOVg8rKbFQGJwEv_3orDSHOJ7hXtcFJO36w/exec';
         const token = localStorage.getItem('token');
         const role = localStorage.getItem('role');
 
-        // === ON PAGE LOAD ===
         window.onload = () => {
             if (!token) {
                 alert('Unauthorized access. Redirecting to login.');
-                window.location.href = 'index.html'; 
+                window.location.href = '../index.html'; 
                 return;
             }
 
-            // Extract the 'id' parameter from the URL (e.g., ?id=DNR-1ABCD)
             const urlParams = new URLSearchParams(window.location.search);
             const donorId = urlParams.get('id');
 
@@ -109,33 +70,44 @@
             }
         };
 
-        // === FETCH SINGLE DONOR API CALL ===
         async function fetchDonorDetails(donorId) {
             const msgDiv = document.getElementById('message');
             const card = document.getElementById('profileCard');
             
             try {
-                // GET request passing action, id, and token in the URL query string
                 const response = await fetch(`${SCRIPT_URL}?action=getDonor&id=${donorId}&token=${token}`);
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    // Hide loading message, show the card
                     msgDiv.style.display = 'none';
                     card.style.display = 'block';
 
-                    // Populate HTML elements with JSON data
                     document.getElementById('lblId').textContent = result.donor.id;
                     document.getElementById('lblName').textContent = result.donor.name;
                     document.getElementById('lblBloodGroup').textContent = result.donor.bloodGroup;
                     document.getElementById('lblContact').textContent = result.donor.contact;
                     document.getElementById('lblLocation').textContent = result.donor.location;
-                    document.getElementById('lblLastDonation').textContent = result.donor.lastDonation;
+                    
+                    // ==========================================
+                    // NEW: DATE FORMATTER
+                    // ==========================================
+                    let rawDate = result.donor.lastDonation;
+                    let displayDate = rawDate;
+                    
+                    if (rawDate && rawDate !== 'Never' && rawDate.includes('T')) {
+                        // Converts timestamp into a clean local date (e.g., 1 Sep 2026)
+                        const dateObj = new Date(rawDate);
+                        displayDate = dateObj.toLocaleDateString('en-GB', { 
+                            day: 'numeric', month: 'short', year: 'numeric' 
+                        });
+                    }
+                    
+                    document.getElementById('lblLastDonation').textContent = displayDate;
+                    // ==========================================
                     
                     const statusEl = document.getElementById('lblStatus');
                     statusEl.textContent = result.donor.status;
                     
-                    // Optional: Color code the status
                     if (result.donor.status === 'Active') {
                         statusEl.style.color = 'green';
                         statusEl.style.fontWeight = 'bold';
@@ -154,15 +126,13 @@
             }
         }
 
-        // === NAVIGATION HELPER ===
         function goBack() {
-            // Check role to route them back to their appropriate dashboard
             if (role === 'Organiser_user') {
                 window.location.href = 'organiser.html';
             } else if (role === 'Data_entry_user') {
                 window.location.href = 'data_entry.html';
             } else {
-                window.history.back(); // Fallback for master admins or others
+                window.history.back(); 
             }
         }
     </script>
