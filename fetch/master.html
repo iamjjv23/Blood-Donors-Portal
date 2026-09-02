@@ -459,7 +459,7 @@
         async function fetchOrganisersList() {
             const tbody = document.getElementById('orgTableBody');
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getOrganisers&token=${token}`);
+                const response = await fetch(`${API}?action=getOrganisers&token=${token}`);
                 const result = await response.json();
 
                 if (result.status === 'success') {
