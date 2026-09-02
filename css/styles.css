@@ -1,0 +1,347 @@
+/* ==========================================
+   1. GLOBAL STYLES & LAYOUT
+   ========================================== */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f7f6;
+    
+    margin: 0;
+    padding: 20px;
+	
+}
+
+.container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* ==========================================
+   2. LOGIN PAGE SPECIFIC STYLES
+   ========================================== */
+
+.bodybg
+{
+	background: linear-gradient(100deg, #ff0000, #ac5454, #d7a9a9, #ff4e4e);
+    background-size: 800% 800%;
+
+    -webkit-animation: AnimationName 30s ease infinite;
+    -moz-animation: AnimationName 30s ease infinite;
+    animation: AnimationName 30s ease infinite;
+}
+
+
+
+.loginbg
+{
+
+    background: linear-gradient(349deg, #ff0000, #ce7979);
+    background-size: 400% 400%;
+
+    -webkit-animation: AnimationName 30s ease infinite;
+    -moz-animation: AnimationName 30s ease infinite;
+    animation: AnimationName 30s ease infinite;
+}
+
+
+ @-webkit-keyframes AnimationName {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+}
+@-moz-keyframes AnimationName {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+}
+@keyframes AnimationName {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+}
+
+
+.muck-up {
+  width: 506px;
+  height: 900px;
+  margin: 0.1em auto;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid #red;
+  background: url('../img/hm.jpg');
+  background-size: cover;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
+}
+
+.overlay {
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  position: absolute;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.content {
+  position: relative;
+  z-index: 10;
+}
+
+.logo {
+  /*margin-top: 5px;*/
+  height: 40px;
+}
+
+
+.logosimg {
+  height: 130px;
+}
+
+.logoimg 
+{
+	height: 250px;
+	margin-top: 50px;
+}
+
+.header {
+  text-align: center;
+  color: #fff;
+}
+
+
+.login {
+  padding: 0 10%;
+  margin-top: 550px;
+}
+
+.loginhead{
+	color: white;
+	font-size: 24px;
+	font-weight: bold;
+  text-align: left;
+}
+
+.logintext
+{
+	color: white;
+	font-size: 15px;
+	font-weight: bold;
+  text-align: left;
+}
+
+.btn {
+  cursor: pointer;
+  display: block;
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: 400;
+  padding: 16px 12px;
+  border-radius: 4px;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  background-image: none;
+  line-height: 1.42857143;
+  border: 1px solid transparent;
+}
+
+
+
+/* ==========================================
+   MESSAGE
+   ========================================== */
+
+#message { 
+			margin-bottom: 15px; 
+			font-weight: bold; 
+			text-align: center; 
+			background-color: #ffeb3b; /* Solid yellow */
+			padding: 2px 6px;          /* Gives the text room to breathe */
+			border-radius: 4px;        /* Smooths out the corners */
+		  }
+
+
+/* ==========================================
+   3. TYPOGRAPHY & HEADERS
+   ========================================== */
+h2 { color: #333; margin: 0; }
+h3 { margin-top: 0; color: #333; }
+
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+.header-buttons { display: flex; gap: 10px; }
+
+/* ==========================================
+   4. BUTTONS
+   ========================================== */
+button { font-family: inherit; }
+
+.btn-submit {
+    background-color: #cf241c; color: white; border: none;
+    padding: 12px; border-radius: 6px; cursor: pointer;
+    width: 100%; font-size: 16px; font-weight: bold;
+}
+.btn-submit:hover { background-color: #b71c1c; }
+
+.btn-nav, .btn-logout, .btn-back, .btn-back-hierarchy {
+    color: white; border: none;
+    padding: 8px 12px; border-radius: 4px; cursor: pointer;
+    font-weight: bold;
+}
+.btn-nav { background-color: #cf241c; margin-right: 5px; }
+.btn-nav:hover { background-color: #e16357; }
+
+.btn-logout { background-color: #555; }
+.btn-logout:hover { background-color: #333; }
+
+.btn-back { background-color: #6c757d; text-decoration: none; }
+.btn-back:hover { background-color: #5a6268; }
+
+.btn-back-hierarchy { background-color: #555; margin-bottom: 15px; }
+.btn-back-hierarchy:hover { background-color: #333; }
+
+.btn-view {
+    background-color: #e16357; color: white; border: none;
+    padding: 6px 12px; border-radius: 4px; cursor: pointer; 
+    text-decoration: none; font-size: 14px; display: inline-block;
+}
+.btn-view:hover { background-color: #ee4a42; }
+
+.btn-sm {
+    padding: 5px 10px; border: none; border-radius: 4px; 
+    cursor: pointer; color: white; font-size: 13px; margin-right: 5px;
+}
+.btn-edit { background-color: #ffc107; color: #333; font-weight: bold; }
+.btn-edit:hover { background-color: #e0a800; }
+.btn-delete { background-color: #dc3545; }
+.btn-delete:hover { background-color: #c82333; }
+
+/* ==========================================
+   5. FORMS & INPUTS
+   ========================================== */
+.form-group { margin-bottom: 20px; }
+label { display: block; margin-bottom: 8px; font-weight: bold; color: #cf241c; }
+input[type="text"], input[type="password"], input[type="tel"], input[type="date"], select {
+    width: 100%; padding: 10px; border: 1px solid #cf241c;
+    border-radius: 6px; box-sizing: border-box; outline: none;}
+
+input:focus, select:focus { border-color: #b71c1c; box-shadow: 0 0 5px rgba(207, 36, 28, 0.3); }
+
+/* ==========================================
+   6. TABS & SECTIONS
+   ========================================== */
+.section { display: none; }
+.section.active { display: block; }
+.btn-nav.active-tab {
+    background-color: #9e9e9e; color: #f1f1f1;
+    cursor: not-allowed; pointer-events: none;
+}
+
+/* ==========================================
+   7. CARDS & DASHBOARD WIDGETS
+   ========================================== */
+.card-container { display: flex; gap: 20px; justify-content: space-between; margin-top: 10px; flex-wrap: wrap; }
+.big-button-card {
+    flex: 1; padding: 30px 20px; border-radius: 10px; text-align: center;
+    background: #fff; cursor: pointer; border: 2px solid transparent;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s ease-in-out;
+    min-width: 200px;
+}
+.big-button-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }
+.card-donors { border-bottom: 5px solid #d32f2f; }
+.card-donors:hover { border-color: #d32f2f; background-color: #fff9f9; }
+.card-orgs { border-bottom: 5px solid #0056b3; }
+.card-orgs:hover { border-color: #0056b3; background-color: #f0f8ff; }
+.stat-number { font-size: 3.5rem; font-weight: bold; margin: 15px 0; }
+
+.summary-card {
+    border: 1px solid #e0e0e0; border-radius: 8px; padding: 30px 20px;
+    text-align: center; background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px;
+}
+.view-link { display: inline-block; text-decoration: none; color: #0056b3; font-size: 1.1rem; font-weight: bold; }
+.view-link:hover { text-decoration: underline; }
+
+.stats-box { background-color: #fff; padding: 20px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 20px; }
+
+/* ==========================================
+   8. LISTS (ORGANISERS)
+   ========================================== */
+.org-list { margin: 0; padding: 0; list-style: none; }
+.org-list li {
+    padding: 12px 10px; border-bottom: 1px solid #eee; 
+    display: flex; justify-content: space-between; align-items: center; 
+    transition: background-color 0.2s;
+}
+.org-list li:hover { background-color: #e9ecef; cursor: pointer; }
+.org-list li:last-child { border-bottom: none; }
+.org-link { text-decoration: none; color: #0056b3; font-weight: bold; font-size: 1.1rem; }
+.org-link:hover { text-decoration: underline; color: #004494; }
+.org-count { font-weight: bold; color: #555; background: #f8f9fa; border: 1px solid #ddd; padding: 5px 12px; border-radius: 20px; }
+
+/* ==========================================
+   9. TABLES
+   ========================================== */
+.table-responsive { overflow-x: auto; width: 100%; }
+table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff;}
+th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+th { background-color: #f8f9fa; color: #333; font-weight: bold; }
+tr:nth-child(even) { background-color: #fcfcfc; }
+.hover-row { transition: background-color 0.2s; }
+.hover-row:hover, tr:hover { background-color: #e9ecef; cursor: pointer; }
+
+.blood-badge {
+    background-color: #d32f2f; color: white; padding: 4px 8px;
+    border-radius: 4px; font-weight: bold; font-size: 14px; display: inline-block;
+}
+
+/* ==========================================
+   10. SEARCH & AUTOCOMPLETE
+   ========================================== */
+.search-box {
+    background-color: #f8f9fa; padding: 15px; border-radius: 6px;
+    border: 1px solid #ddd; margin-bottom: 25px;
+}
+.search-container { position: relative; width: 100%; }
+.search-container input { margin-bottom: 0; }
+.suggestions-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: white; border: 1px solid #ccc; border-top: none;
+    border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto;
+    margin: 0; padding: 0; list-style: none; z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none;
+}
+.suggestions-dropdown li { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
+.suggestions-dropdown li:hover { background-color: #f0f0f0; }
+.no-results { color: #d32f2f; cursor: default; }
+.no-results:hover { background-color: white; }
+
+/* ==========================================
+   11. DONOR PROFILE
+   ========================================== */
+.profile-card {
+    border: 1px solid #ddd; border-radius: 6px; padding: 20px;
+    background-color: #fafafa; display: none;
+}
+.blood-group-badge {
+    display: inline-block; background-color: #d32f2f; color: white;
+    padding: 15px; border-radius: 50%; font-size: 24px; font-weight: bold;
+    text-align: center; margin-bottom: 15px; min-width: 30px;
+}
+.detail-row { display: flex; border-bottom: 1px solid #eee; padding: 10px 0; }
+.detail-row:last-child { border-bottom: none; }
+.detail-label { width: 40%; font-weight: bold; color: #555; }
+.detail-value { width: 60%; color: #333; }
+.org-header { background-color: #e8f4f8; padding: 15px; border-radius: 6px; border: 1px solid #b8daff; margin-bottom: 20px; }
+.org-header h3 { margin: 0; color: #0056b3; }
