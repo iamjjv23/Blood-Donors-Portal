@@ -45,8 +45,7 @@
     
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwS2kfwhaNRWfhcskWi0PTzoHCHqzyHGo0vOVg8rKbFQGJwEv_3orDSHOJ7hXtcFJO36w/exec';
-
+        const const API = 'UPH';
         window.onload = () => localStorage.clear();
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -62,7 +61,7 @@
             const payload = { action: 'login', username: user, password: pass };
 
             try {
-                const response = await fetch(SCRIPT_URL, {
+                const response = await fetch(API, {
                     method: 'POST',
                     body: JSON.stringify(payload)
                 });
