@@ -67,7 +67,7 @@
             const msgDiv = document.getElementById('message');
             
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getAllDonors&token=${token}`);
+                const response = await fetch(`${API}?action=getAllDonors&token=${token}`);
                 const result = await response.json();
 
                 if (result.status === 'success') {
