@@ -8,29 +8,23 @@
     <link rel="icon" type="image/x-icon" href="../img/favicon.png">
 </head>
 <body class="bodybg">
-					
+                    
   <div class="container">
-					
+                    
         <div class="header">
             <h2>Data Entry Form</h2>
             <div class="header-buttons" id="navButtons">
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
         </div>
-		<center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center>
-		<!--
-        <div class="search-box">
-            <label style="margin-bottom: 10px; color:#333;">Quick Profile Lookup:</label>
-            <div class="search-container">
-                <input type="text" id="searchContact" placeholder="Type contact number or name..." autocomplete="off">
-                <ul id="suggestionsList" class="suggestions-dropdown"></ul>
-            </div>
-            <small id="searchStatus" style="color: #666; display: block; margin-top: 5px;">Loading contacts database...</small>
-        </div>
-        -->
+        <center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center>
+
         <div id="message"></div>
 
         <form id="donorForm">
+            <!-- HIDDEN FIELD TO TRACK IF EDITING -->
+            <input type="hidden" id="editDonorId" value="">
+
             <div class="form-group">
                 <label for="name">Full Name</label>
                 <input type="text" id="name" required placeholder="Donor Name">
@@ -76,17 +70,19 @@
                 <small style="color: #666;">Defaults to today's date.</small>
             </div>
 
-            <button type="submit" class="btn-submit">Register Donor</button>
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn-submit" id="submitBtnText" style="flex: 1;">Register Donor</button>
+                <button type="button" class="btn-logout" id="cancelEditBtn" style="display:none; flex: 1; background-color: #6c757d;" onclick="cancelEdit()">Cancel Edit</button>
+            </div>
         </form>
     </div>
 
     <script>
         const API = 'UPH';
-        const token = localStorage.getItem('token');
+		const token = localStorage.getItem('token');
         const role = localStorage.getItem('role');
+        const currentUserId = localStorage.getItem('userId');
         
-        let donorsCache = null;
-
         window.onload = () => {
             if (!token) {
                 alert('Unauthorized access. Redirecting to login.');
@@ -114,11 +110,33 @@
             document.getElementById('lastDonation').value = today;
 
             fetchInitialData();
+
+            // Handle "Edit" button click from Tables
+            const urlParams = new URLSearchParams(window.location.search);
+            const editId = urlParams.get('edit');
+            if (editId) {
+                const msgDiv = document.getElementById('message');
+                msgDiv.textContent = 'Loading donor data...';
+                msgDiv.style.color = '#0056b3';
+                
+                fetch(`${API}?action=getDonor&id=${editId}&token=${token}`)
+                    .then(res => res.json())
+                    .then(result => {
+                        if (result.status === 'success') {
+                            msgDiv.textContent = '';
+                            populateFormForEdit(result.donor);
+                        } else {
+                            msgDiv.textContent = 'Failed to load donor data for editing.';
+                            msgDiv.style.color = 'red';
+                        }
+                    }).catch(err => {
+                        msgDiv.textContent = 'Connection error.';
+                        msgDiv.style.color = 'red';
+                    });
+            }
         };
 
         async function fetchInitialData() {
-            const statusText = document.getElementById('searchStatus');
-            
             fetch(`${API}?action=getFormConfig&token=${token}`)
                 .then(res => res.json())
                 .then(result => {
@@ -135,73 +153,84 @@
                         }
                     }
                 }).catch(err => console.error("Error loading camps", err));
-
-            try {
-                const response = await fetch(`${API}?action=getAllDonors&token=${token}`);
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    donorsCache = result.donors;
-                    statusText.textContent = 'Ready: Start typing to search.';
-                    statusText.style.color = 'green';
-                } else {
-                    statusText.textContent = 'Search offline. Try reloading.';
-                    statusText.style.color = 'red';
-                }
-            } catch (error) {
-                statusText.textContent = 'Connection error. Search disabled.';
-                statusText.style.color = 'red';
-            }
         }
 
-        const searchInput = document.getElementById('searchContact');
-        const suggestionsList = document.getElementById('suggestionsList');
+        function populateFormForEdit(donor) {
+            // 1. Verify Edit Permissions
+            let canEdit = false;
+            if (role === 'Master_admin' || role === 'Organiser_user') canEdit = true;
+            else if (role === 'Data_entry_user' && donor.enteredBy === currentUserId) canEdit = true;
 
-        searchInput.addEventListener('input', function() {
-            const query = this.value.trim().toLowerCase();
-            suggestionsList.innerHTML = '';
-
-            if (query.length === 0 || !donorsCache) {
-                suggestionsList.style.display = 'none';
+            if (!canEdit) {
+                alert("You don't have permission to edit this record. Redirecting to view profile.");
+                window.location.href = `donor.html?id=${donor.id}`;
                 return;
             }
 
-            const matches = donorsCache.filter(donor => 
-                donor.contact.toLowerCase().includes(query) || 
-                donor.name.toLowerCase().includes(query)
-            );
+            // 2. Populate the UI
+            document.getElementById('editDonorId').value = donor.id;
+            document.getElementById('name').value = donor.name;
+            document.getElementById('bloodGroup').value = donor.bloodGroup;
+            document.getElementById('contact').value = donor.contact;
+            
+            // Handle dynamically appended camp if it's missing from the dropdown
+            const campSelect = document.getElementById('campName');
+            let campExists = false;
+            for(let i=0; i<campSelect.options.length; i++) {
+                if(campSelect.options[i].value === donor.campName) campExists = true;
+            }
+            if(!campExists && donor.campName) {
+                campSelect.innerHTML += `<option value="${donor.campName}">${donor.campName}</option>`;
+            }
+            campSelect.value = donor.campName;
+            
+            document.getElementById('location').value = donor.location;
 
-            if (matches.length > 0) {
-                suggestionsList.style.display = 'block';
-                matches.forEach(donor => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<strong>${donor.contact}</strong> - ${donor.name} <em>(${donor.bloodGroup})</em>`;
-                    li.onclick = () => { window.location.href = `donor.html?id=${donor.id}`; };
-                    suggestionsList.appendChild(li);
-                });
+            // Handle date parsing for HTML Input
+            let dDate = donor.lastDonation;
+            if (dDate && dDate !== 'Never' && dDate.includes('T')) {
+                dDate = new Date(dDate).toISOString().split('T')[0];
             } else {
-                suggestionsList.style.display = 'block';
-                const li = document.createElement('li');
-                li.className = 'no-results';
-                li.textContent = 'No matching contacts found';
-                suggestionsList.appendChild(li);
+                dDate = new Date().toISOString().split('T')[0];
             }
-        });
+            document.getElementById('lastDonation').value = dDate;
 
-        document.addEventListener('click', function(e) {
-            if (e.target !== searchInput && e.target !== suggestionsList) {
-                suggestionsList.style.display = 'none';
-            }
-        });
+            // 3. UI Changes for Edit Mode
+            document.getElementById('submitBtnText').textContent = 'Update Donor Details';
+            document.getElementById('cancelEditBtn').style.display = 'block';
+            document.getElementById('message').innerHTML = `<span style="color:orange;">Editing Donor: ${donor.id}</span>`;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
+        function cancelEdit() {
+            document.getElementById('donorForm').reset();
+            document.getElementById('editDonorId').value = '';
+            document.getElementById('submitBtnText').textContent = 'Register Donor';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            document.getElementById('message').textContent = '';
+            document.getElementById('lastDonation').value = new Date().toISOString().split('T')[0];
+            
+            // Remove 'edit' parameter from URL if it exists
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.pushState({path:newUrl},'',newUrl);
+        }
+
+        // =====================================
+        // SUBMIT (ADD OR EDIT)
+        // =====================================
         document.getElementById('donorForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const msgDiv = document.getElementById('message');
-            msgDiv.textContent = 'Saving donor data...';
+            
+            const editId = document.getElementById('editDonorId').value;
+            const isEditing = editId !== "";
+            
+            msgDiv.textContent = isEditing ? 'Updating donor data...' : 'Saving donor data...';
             msgDiv.style.color = '#0056b3';
 
             const payload = {
-                action: 'addDonor', token: token,
+                action: isEditing ? 'editDonor' : 'addDonor', 
+                token: token,
                 donorData: {
                     name: document.getElementById('name').value.trim(),
                     bloodGroup: document.getElementById('bloodGroup').value,
@@ -211,29 +240,24 @@
                     lastDonation: document.getElementById('lastDonation').value || 'Never'
                 }
             };
+            
+            if (isEditing) payload.donorId = editId;
 
             try {
-                const response = await fetch(API, { method: 'POST', body: JSON.stringify(payload) });
+                const response = await fetch(API, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload) 
+                });
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    msgDiv.innerHTML = `Success! Donor registered with ID: <strong>${result.id}</strong>`;
+                    msgDiv.innerHTML = isEditing ? `Success! Donor <strong>${editId}</strong> updated.` : `Success! Donor registered with ID: <strong>${result.id}</strong>`;
                     msgDiv.style.color = 'green';
                     
-                    document.getElementById('name').value = '';
-                    document.getElementById('contact').value = '';
-                    document.getElementById('location').value = '';
-                    document.getElementById('bloodGroup').selectedIndex = 0;
-                    
-                    if (donorsCache) {
-                        donorsCache.push({
-                            id: result.id, name: payload.donorData.name,
-                            contact: payload.donorData.contact,
-                            bloodGroup: payload.donorData.bloodGroup,
-                            campName: payload.donorData.campName
-                        });
-                    }
+                    cancelEdit(); // Clears form safely
                 } else {
+                    // This handles the Duplicate Contact Error natively
                     msgDiv.textContent = 'Error: ' + result.message;
                     msgDiv.style.color = 'red';
                 }
