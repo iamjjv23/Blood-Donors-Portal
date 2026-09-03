@@ -156,7 +156,6 @@
         }
 
         function populateFormForEdit(donor) {
-            // 1. Verify Edit Permissions
             let canEdit = false;
             if (role === 'Master_admin' || role === 'Organiser_user') canEdit = true;
             else if (role === 'Data_entry_user' && donor.enteredBy === currentUserId) canEdit = true;
@@ -167,13 +166,11 @@
                 return;
             }
 
-            // 2. Populate the UI
             document.getElementById('editDonorId').value = donor.id;
             document.getElementById('name').value = donor.name;
             document.getElementById('bloodGroup').value = donor.bloodGroup;
             document.getElementById('contact').value = donor.contact;
             
-            // Handle dynamically appended camp if it's missing from the dropdown
             const campSelect = document.getElementById('campName');
             let campExists = false;
             for(let i=0; i<campSelect.options.length; i++) {
@@ -186,7 +183,6 @@
             
             document.getElementById('location').value = donor.location;
 
-            // Handle date parsing for HTML Input
             let dDate = donor.lastDonation;
             if (dDate && dDate !== 'Never' && dDate.includes('T')) {
                 dDate = new Date(dDate).toISOString().split('T')[0];
@@ -195,7 +191,6 @@
             }
             document.getElementById('lastDonation').value = dDate;
 
-            // 3. UI Changes for Edit Mode
             document.getElementById('submitBtnText').textContent = 'Update Donor Details';
             document.getElementById('cancelEditBtn').style.display = 'block';
             document.getElementById('message').innerHTML = `<span style="color:orange;">Editing Donor: ${donor.id}</span>`;
@@ -210,14 +205,10 @@
             document.getElementById('message').textContent = '';
             document.getElementById('lastDonation').value = new Date().toISOString().split('T')[0];
             
-            // Remove 'edit' parameter from URL if it exists
             const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
             window.history.pushState({path:newUrl},'',newUrl);
         }
 
-        // =====================================
-        // SUBMIT (ADD OR EDIT)
-        // =====================================
         document.getElementById('donorForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const msgDiv = document.getElementById('message');
@@ -255,11 +246,14 @@
                     msgDiv.innerHTML = isEditing ? `Success! Donor <strong>${editId}</strong> updated.` : `Success! Donor registered with ID: <strong>${result.id}</strong>`;
                     msgDiv.style.color = 'green';
                     
-                    cancelEdit(); // Clears form safely
+                    cancelEdit(); 
                 } else {
-                    // This handles the Duplicate Contact Error natively
                     msgDiv.textContent = 'Error: ' + result.message;
                     msgDiv.style.color = 'red';
+                    // NEW: Duplicate Contact Alert Popup
+                    if (result.message.toLowerCase().includes('contact number')) {
+                        alert(result.message);
+                    }
                 }
             } catch (error) {
                 msgDiv.textContent = 'Connection failed. Check your network or Web App URL.';
