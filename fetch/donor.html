@@ -10,7 +10,7 @@
 <body class="bodybg">
 
     <div class="container">
-	<center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center>
+        <center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center>
         <div class="header">
             <h2>Donor Profile</h2>
             <button class="btn-back" onclick="goBack()">&larr; Back</button>
@@ -88,14 +88,11 @@
                     document.getElementById('lblContact').textContent = result.donor.contact;
                     document.getElementById('lblLocation').textContent = result.donor.location;
                     
-                    // ==========================================
-                    // NEW: DATE FORMATTER
-                    // ==========================================
+                    // DATE FORMATTER
                     let rawDate = result.donor.lastDonation;
                     let displayDate = rawDate;
                     
                     if (rawDate && rawDate !== 'Never' && rawDate.includes('T')) {
-                        // Converts timestamp into a clean local date (e.g., 1 Sep 2026)
                         const dateObj = new Date(rawDate);
                         displayDate = dateObj.toLocaleDateString('en-GB', { 
                             day: 'numeric', month: 'short', year: 'numeric' 
@@ -103,7 +100,6 @@
                     }
                     
                     document.getElementById('lblLastDonation').textContent = displayDate;
-                    // ==========================================
                     
                     const statusEl = document.getElementById('lblStatus');
                     statusEl.textContent = result.donor.status;
@@ -114,7 +110,6 @@
                     } else {
                         statusEl.style.color = 'orange';
                     }
-
                 } else {
                     msgDiv.textContent = 'Error: ' + result.message;
                     msgDiv.style.color = 'red';
