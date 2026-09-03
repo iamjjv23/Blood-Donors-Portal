@@ -87,6 +87,9 @@
                     }
 
                     result.donors.forEach(donor => {
+                        let actionHtml = `<a href="donor.html?id=${donor.id}" class="btn-view">View</a>`;
+                        actionHtml += ` <button class="btn-sm btn-edit" style="margin-left: 5px;" onclick="window.location.href='data_entry.html?edit=${donor.id}'">Edit</button>`;
+
                         const row = `<tr>
                             <td><strong>${donor.name}</strong></td>
                             <td><span class="blood-badge">${donor.bloodGroup}</span></td>
@@ -96,7 +99,7 @@
                             <td style="color: ${donor.status === 'Active' ? 'green' : 'orange'}; font-weight: bold;">
                                 ${donor.status}
                             </td>
-                            <td><a href="donor.html?id=${donor.id}" class="btn-view">View Profile</a></td>
+                            <td>${actionHtml}</td>
                         </tr>`;
                         tableBody.innerHTML += row;
                     });
