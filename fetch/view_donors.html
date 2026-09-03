@@ -77,7 +77,6 @@
                     }
 
                     result.donors.forEach(donor => {
-                        // Dynamically generate action buttons based on strict Role permissions
                         let actionsHtml = `<a href="donor.html?id=${donor.id}" class="btn-view">View</a>`;
                         
                         let canEdit = false;
@@ -88,18 +87,21 @@
                             actionsHtml += ` <button class="btn-sm btn-edit" style="margin-left: 5px;" onclick="window.location.href='data_entry.html?edit=${donor.id}'">Edit</button>`;
                         }
                         
-                        // ONLY Master Admin gets Delete Button
                         if (role === 'Master_admin') {
                             actionsHtml += ` <button class="btn-sm btn-delete" style="margin-left: 5px;" onclick="deleteDonorRecord('${donor.id}')">Delete</button>`;
                         }
+
+                        // UPDATE: Visual Formatter Logic for Tables
+                        const statusDisplay = donor.status === 'Active' ? '🟢 Active' : 'Rest 🩸';
+                        const statusColor = donor.status === 'Active' ? 'green' : 'orange';
 
                         const row = `<tr>
                             <td><strong>${donor.name}</strong></td>
                             <td><span class="blood-badge">${donor.bloodGroup}</span></td>
                             <td>${donor.contact}</td>
                             <td>${donor.location}</td>
-                            <td style="color: ${donor.status === 'Active' ? 'green' : 'orange'}; font-weight: bold;">
-                                ${donor.status}
+                            <td style="color: ${statusColor}; font-weight: bold;">
+                                ${statusDisplay}
                             </td>
                             <td>${actionsHtml}</td>
                         </tr>`;
@@ -133,7 +135,7 @@
                 const result = await response.json();
                 
                 if(result.status === 'success') {
-                    fetchDonors(); // Refresh the table
+                    fetchDonors(); 
                 } else {
                     alert('Error: ' + result.message);
                 }
