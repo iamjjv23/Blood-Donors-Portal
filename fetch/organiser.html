@@ -10,19 +10,18 @@
 <body class="bodybg">
 
     <div class="container">
-	<center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center>
+        <center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center>
         <div class="header" style="float: right;">
-            
             <div>
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
         </div>
         
         <div style="margin-bottom: 20px;">
-		<h2>Organiser Dashboard</h2> <br>
+            <h2>Organiser Dashboard</h2> <br>
             <button class="btn-nav tab-btn active-tab" onclick="showSection('donorSection', this)">Dashboard Overview</button>
             <button class="btn-nav tab-btn" onclick="showSection('userSection', this)">Add New User</button>
-			<button class="btn-nav" onclick="window.location.href='data_entry.html'">Data Entry Form</button>
+            <button class="btn-nav" onclick="window.location.href='data_entry.html'">Data Entry Form</button>
         </div>
 
         <div id="message"></div>
@@ -115,7 +114,11 @@
             };
 
             try {
-                const response = await fetch(API, { method: 'POST', body: JSON.stringify(payload) });
+                const response = await fetch(API, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload) 
+                });
                 const result = await response.json();
 
                 if (result.status === 'success') {
