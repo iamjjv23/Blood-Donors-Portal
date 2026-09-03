@@ -11,25 +11,21 @@
     
     <div class="container">
         <div class="header">
-		
-            
             <div>
-			<center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center>
-			</div>
-			<div>
+            <center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center>
+            </div>
+            <div>
                 <button style="float: right;" class="btn-logout" onclick="logout()">Logout</button>
-				<br><br><br><br>
-				<button class="btn-nav" onclick="goBack()">Back to Dashboard</button>
+                <br><br><br><br>
+                <button class="btn-nav" onclick="goBack()">Back to Dashboard</button>
                 <button class="btn-nav" onclick="window.location.href='data_entry.html'">Data Entry Form</button>
                 
             </div>
         </div>
-        
-        
 
         <div class="table-responsive">
-		<h2>Donor Database</h2>
-		<div id="message">Loading database...</div>
+        <h2>Donor Database</h2>
+        <div id="message">Loading database...</div>
             <table>
                 <thead>
                     <tr>
@@ -52,6 +48,7 @@
         const API = 'UPH';
         const token = localStorage.getItem('token');
         const role = localStorage.getItem('role');
+        const currentUserId = localStorage.getItem('userId');
 
         window.onload = () => {
             if (!token) {
@@ -80,6 +77,22 @@
                     }
 
                     result.donors.forEach(donor => {
+                        // Dynamically generate action buttons based on strict Role permissions
+                        let actionsHtml = `<a href="donor.html?id=${donor.id}" class="btn-view">View</a>`;
+                        
+                        let canEdit = false;
+                        if (role === 'Master_admin' || role === 'Organiser_user') canEdit = true;
+                        else if (role === 'Data_entry_user' && donor.enteredBy === currentUserId) canEdit = true;
+
+                        if (canEdit) {
+                            actionsHtml += ` <button class="btn-sm btn-edit" style="margin-left: 5px;" onclick="window.location.href='data_entry.html?edit=${donor.id}'">Edit</button>`;
+                        }
+                        
+                        // ONLY Master Admin gets Delete Button
+                        if (role === 'Master_admin') {
+                            actionsHtml += ` <button class="btn-sm btn-delete" style="margin-left: 5px;" onclick="deleteDonorRecord('${donor.id}')">Delete</button>`;
+                        }
+
                         const row = `<tr>
                             <td><strong>${donor.name}</strong></td>
                             <td><span class="blood-badge">${donor.bloodGroup}</span></td>
@@ -88,7 +101,7 @@
                             <td style="color: ${donor.status === 'Active' ? 'green' : 'orange'}; font-weight: bold;">
                                 ${donor.status}
                             </td>
-                            <td><a href="donor.html?id=${donor.id}" class="btn-view">View Profile</a></td>
+                            <td>${actionsHtml}</td>
                         </tr>`;
                         tableBody.innerHTML += row;
                     });
@@ -99,6 +112,33 @@
             } catch (error) {
                 msgDiv.textContent = 'Connection error while fetching data.';
                 msgDiv.style.color = 'red';
+            }
+        }
+
+        async function deleteDonorRecord(donorId) {
+            if(!confirm("Are you sure you want to delete this donor? This action cannot be undone.")) return;
+            
+            const msgDiv = document.getElementById('message');
+            msgDiv.style.display = 'block';
+            msgDiv.textContent = 'Deleting donor...';
+            
+            const payload = { action: 'deleteDonorRecord', token: token, donorId: donorId };
+            
+            try {
+                const response = await fetch(API, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload) 
+                });
+                const result = await response.json();
+                
+                if(result.status === 'success') {
+                    fetchDonors(); // Refresh the table
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch(e) {
+                alert('Connection failed while deleting.');
             }
         }
 
