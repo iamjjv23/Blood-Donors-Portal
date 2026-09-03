@@ -90,14 +90,18 @@
                         let actionHtml = `<a href="donor.html?id=${donor.id}" class="btn-view">View</a>`;
                         actionHtml += ` <button class="btn-sm btn-edit" style="margin-left: 5px;" onclick="window.location.href='data_entry.html?edit=${donor.id}'">Edit</button>`;
 
+                        // UPDATE: Visual Formatter Logic
+                        const statusDisplay = donor.status === 'Active' ? '🟢 Active' : 'Rest 🩸';
+                        const statusColor = donor.status === 'Active' ? 'green' : 'orange';
+
                         const row = `<tr>
                             <td><strong>${donor.name}</strong></td>
                             <td><span class="blood-badge">${donor.bloodGroup}</span></td>
                             <td>${donor.contact}</td>
                             <td>${donor.location}</td>
                             <td>${donor.campName || 'General'}</td>
-                            <td style="color: ${donor.status === 'Active' ? 'green' : 'orange'}; font-weight: bold;">
-                                ${donor.status}
+                            <td style="color: ${statusColor}; font-weight: bold;">
+                                ${statusDisplay}
                             </td>
                             <td>${actionHtml}</td>
                         </tr>`;
