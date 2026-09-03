@@ -88,7 +88,6 @@
                     document.getElementById('lblContact').textContent = result.donor.contact;
                     document.getElementById('lblLocation').textContent = result.donor.location;
                     
-                    // DATE FORMATTER
                     let rawDate = result.donor.lastDonation;
                     let displayDate = rawDate;
                     
@@ -102,13 +101,15 @@
                     document.getElementById('lblLastDonation').textContent = displayDate;
                     
                     const statusEl = document.getElementById('lblStatus');
-                    statusEl.textContent = result.donor.status;
-                    
+                    // UPDATE: Visual Formatter applied to Profile
                     if (result.donor.status === 'Active') {
+                        statusEl.innerHTML = '🟢 Active';
                         statusEl.style.color = 'green';
                         statusEl.style.fontWeight = 'bold';
                     } else {
+                        statusEl.innerHTML = 'Rest 🩸';
                         statusEl.style.color = 'orange';
+                        statusEl.style.fontWeight = 'bold';
                     }
                 } else {
                     msgDiv.textContent = 'Error: ' + result.message;
