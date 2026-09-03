@@ -139,9 +139,9 @@
                 <form id="settingsForm">
                     <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color: #333; margin-top:0;">Connect Database</h3>
                     <div class="form-group">
-                        <label for="donorSheetId">Donor Database:</label>
-                        <input type="text" id="donorSheetId" required placeholder="API url should come here">
-                        <small style="color: #666; display: block; margin-top: 5px;">Enter the API of your Database.</small>
+                        <label for="donorSheetId">Donor Database ID:</label>
+                        <input type="text" id="donorSheetId" required placeholder="Paste the Google Sheet ID here">
+                        <small style="color: #666; display: block; margin-top: 5px;">Enter the exact ID of your External Database Sheet.</small>
                     </div>
                     <button type="submit" class="btn-submit">Save Database Configuration</button>
                 </form>
@@ -153,7 +153,7 @@
                 <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color: #333; margin-top:0;">Register Camps</h3>
                 <p style="color: #666; margin-bottom: 15px;">These are available to select as Camps dropdown.</p>
                 <div style="display:flex; gap:10px; margin-bottom: 15px;">
-                    <input type="text" id="newCampInput" placeholder="Enter new camp name..." style="flex:1; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                    <input type="text" id="newCampInput" placeholder="Enter new camp name..." style="flex:1; padding:10px; border:1px solid #ccc; border-radius:4px; outline:none;">
                     <button type="button" class="btn-submit" style="width: auto; background-color: #0056b3;" onclick="addCamp()">Add New Camp</button>
                 </div>
             </div>
@@ -183,6 +183,7 @@
                 </table>
             </div>
         </div> 
+
     </div>
 
     <script>
@@ -311,7 +312,6 @@
             
             document.getElementById('individualDonorsTitle').textContent = `Entries logged by: ${displayName}`;
             
-            // We store the target user so the table can be refreshed correctly upon Delete
             document.getElementById('individualDonorsSection').dataset.currentUser = targetUserId;
             document.getElementById('individualDonorsSection').dataset.currentName = rawName;
             document.getElementById('individualDonorsSection').dataset.currentOrgId = orgId;
@@ -336,13 +336,17 @@
                         actionHtml += ` <button class="btn-sm btn-edit" style="margin-left:5px;" onclick="window.location.href='data_entry.html?edit=${donor.id}'">Edit</button>`;
                         actionHtml += ` <button class="btn-sm btn-delete" style="margin-left:5px;" onclick="deleteDonorRecord('${donor.id}')">Delete</button>`;
 
+                        // UPDATE: Visual Formatter Logic for Master Table
+                        const statusDisplay = donor.status === 'Active' ? '🟢 Active' : 'Rest 🩸';
+                        const statusColor = donor.status === 'Active' ? 'green' : 'orange';
+
                         tbody.innerHTML += `<tr>
                             <td><strong>${donor.name}</strong></td>
                             <td><span class="blood-badge">${donor.bloodGroup}</span></td>
                             <td>${donor.contact}</td>
                             <td>${donor.location}</td>
                             <td>${donor.campName || 'General'}</td>
-                            <td style="color: ${donor.status === 'Active' ? 'green' : 'orange'}; font-weight: bold;">${donor.status}</td>
+                            <td style="color: ${statusColor}; font-weight: bold;">${statusDisplay}</td>
                             <td>${actionHtml}</td>
                         </tr>`;
                     });
@@ -364,7 +368,6 @@
                 });
                 const result = await response.json();
                 if(result.status === 'success') {
-                    // Refreshes the currently open table natively
                     const section = document.getElementById('individualDonorsSection');
                     fetchUserDonors(section.dataset.currentUser, section.dataset.currentName, section.dataset.currentOrgId);
                     fetchMasterStats();
