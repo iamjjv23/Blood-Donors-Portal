@@ -19,8 +19,9 @@
             
             <div class="login">
                 <p class="loginhead">Blood Donor's Portal Login</p>
-                <div id="message"></div>
                 
+				<div id="message"></div>
+				
                 <form id="loginForm">
                     <div class="form-group">
                         <label class="logintext" for="username">Username</label>
@@ -35,47 +36,42 @@
                     <button type="submit" class="btn-submit">Sign In</button>
                 </form>
             </div>
-            
+
         </div>
     </div>
 
     <script>
-        // FIXED: Removed double "const" and restored your actual Web App URL
         const API = 'https://script.google.com/macros/s/AKfycbwS2kfwhaNRWfhcskWi0PTzoHCHqzyHGo0vOVg8rKbFQGJwEv_3orDSHOJ7hXtcFJO36w/exec';
         
-        // FIXED: Safe storage clear on load
-        document.addEventListener('DOMContentLoaded', () => {
-            localStorage.clear();
-        });
+  
+        window.onload = () => localStorage.clear();
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            // Explicitly prevents the page from refreshing
-            e.preventDefault(); 
+            e.preventDefault(); // Prevents the page from refreshing
             
             const msgDiv = document.getElementById('message');
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value.trim();
 
-            msgDiv.textContent = 'Authenticating...';
-            msgDiv.style.color = '#0056b3';
+            // UPDATED: Now shows "Connecting..." immediately upon click
+            msgDiv.textContent = 'Connecting...';
+            // msgDiv.style.color = '#ffeb3b'; High visibility on dark overlay
 
             const payload = { action: 'login', username: user, password: pass };
 
             try {
                 const response = await fetch(API, {
                     method: 'POST',
-                    // FIXED: Re-added the crucial header to prevent Google Apps Script CORS crash
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8' 
-                    },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // REQUIRED for Apps Script
                     body: JSON.stringify(payload)
                 });
                 
                 const result = await response.json();
 
+                // UPDATES THE STATUS AFTER CONNECTION IS COMPLETE
                 if (result.status === 'success') {
                     msgDiv.textContent = 'Login successful! Redirecting...';
-                    msgDiv.style.color = 'green';
+                    msgDiv.style.color = '#4caf50';
                     
                     localStorage.setItem('token', result.token);
                     localStorage.setItem('role', result.role);
@@ -89,16 +85,16 @@
                         window.location.href = 'fetch/data_entry.html';
                     } else {
                         msgDiv.textContent = 'Unknown role assigned.';
-                        msgDiv.style.color = 'red';
+                        msgDiv.style.color = '#ff4e4e';
                     }
                 } else {
                     msgDiv.textContent = 'Invalid credentials. Please try again.';
-                    msgDiv.style.color = 'red';
+                    //msgDiv.style.color = '#ff4e4e';
                 }
             } catch (error) {
-                msgDiv.textContent = 'Connection failed. Check your Web App URL.';
-                msgDiv.style.color = 'red';
-                console.error('Login Error:', error);
+                msgDiv.textContent = 'Connection failed. Check your network or Web App URL.';
+                msgDiv.style.color = '#ff4e4e';
+                console.error(error);
             }
         });
     </script>
