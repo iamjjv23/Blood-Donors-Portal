@@ -24,8 +24,8 @@ jobs:
 
       - name: Inject Secret URL into code
         run: |
-          # Finds all HTML files and replaces the placeholder with your GitHub Secret
-          find . -type f -name "*.html" -exec sed -i "s|UPH|${{ secrets.ASU }}|g" {} +
+          # Finds all JS files and replaces the placeholder with your GitHub Secret
+          find . -type f -name "*.js" -exec sed -i "s|UPH|${{ secrets.ASU }}|g" {} +
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4
