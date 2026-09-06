@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Donor Directory | Blood Donation Portal</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon" type="image/x-icon" href="../img/favicon.png">
+</head>
+<body class="bodybg">
+    
+    <div class="container">
+        <div class="header">
+            <div><center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center></div>
+            <div>
+                <!-- FIXED: Added .html -->
+                <button class="btn-logout" style="float: right;" onclick="window.location.href='../index.html'">&larr; Back to Login</button>
+            </div>
+        </div>
+
+        <div class="filter-box" style="background:#f8f9fa; padding:15px; border-radius:6px; border:1px solid #ddd; margin-bottom:15px; display:flex; gap:10px; align-items:flex-end; flex-wrap: wrap;">
+            <div style="flex:1; min-width: 150px;">
+                <label style="font-weight:bold; display:block; margin-bottom:5px; color:#333;">Blood Group:</label>
+                <select id="filterBloodGroup" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                    <option value="All">All Blood Groups</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                </select>
+            </div>
+            <div style="flex:1; min-width: 150px;">
+                <label style="font-weight:bold; display:block; margin-bottom:5px; color:#333;">Status:</label>
+                <select id="filterStatus" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                    <option value="All">All Statuses</option>
+                    <option value="Active">Active</option>
+                    <option value="Rest">Rest</option>
+                </select>
+            </div>
+            <button class="btn-submit" style="width:auto; background-color:#0056b3; padding: 10px 15px;" onclick="applyFilters()">Filter</button>
+        </div>
+
+        <div class="table-responsive">
+            <h2>Public Donor Database</h2>
+            <p style="color: #555; font-size: 13px;">Contact numbers are hidden to protect donor privacy.</p>
+            <div id="message">Loading database...</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Blood Group</th>
+                        <th>Contact</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="donorTableBody">
+                    <!-- Data will be injected here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="../js/public_donors.js"></script>
+</body>
+</html>
