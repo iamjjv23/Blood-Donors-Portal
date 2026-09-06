@@ -39,7 +39,18 @@
 
         </div>
     </div>
-
+	
+	<script>
+		(function() {
+        const currentUrl = window.location.href;
+        if (currentUrl.includes('.html')) 
+        {
+            const cleanUrl = currentUrl.replace(/\.html/g, '');
+            window.history.replaceState(null, null, cleanUrl);
+        }
+    })();
+	</script>
     <script src="js/login.js"></script>
+	
 </body>
 </html>
