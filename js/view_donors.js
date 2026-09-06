@@ -80,8 +80,8 @@ function renderTable(donorsArray) {
             actionsHtml += ` <button class="btn-sm btn-delete" style="margin-left: 5px;" onclick="deleteDonorRecord('${donor.id}')">Delete</button>`;
         }
 
-        const statusDisplay = donor.status === 'Active' ? '🟢 Active' : 'Rest 🩸';
-        const statusColor = donor.status === 'Active' ? 'green' : 'orange';
+        const statusDisplay = donor.status === 'Active' ? '🟢 Active' : '🩸 Rest';
+        const statusColor = donor.status === 'Active' ? '#78B159' : '#DD2E44';
 
         const row = `<tr>
             <td><strong>${donor.name}</strong></td>
