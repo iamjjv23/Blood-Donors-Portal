@@ -1,13 +1,3 @@
-(function() {
-        const currentUrl = window.location.href;
-        if (currentUrl.includes('.html')) 
-        {
-            const cleanUrl = currentUrl.replace(/\.html/g, '');
-            window.history.replaceState(null, null, cleanUrl);
-        }
-    })();
-
-
 const API = 'UPH';
         
   
