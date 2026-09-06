@@ -8,24 +8,50 @@
     <link rel="icon" type="image/x-icon" href="../img/favicon.png">
 </head>
 <body class="bodybg">
-    
     <div class="container">
         <div class="header">
             <div>
-            <center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center>
+                <center><img class="logosimg" src="../img/dpll.png" alt="Logo"></center>
             </div>
             <div>
                 <button style="float: right;" class="btn-logout" onclick="logout()">Logout</button>
                 <br><br><br><br>
                 <button class="btn-nav" onclick="goBack()">Back to Dashboard</button>
+                <!-- FIXED: Added .html -->
                 <button class="btn-nav" onclick="window.location.href='data_entry.html'">Data Entry Form</button>
-                
             </div>
         </div>
 
+        <div class="filter-box" style="background:#f8f9fa; padding:15px; border-radius:6px; border:1px solid #ddd; margin-bottom:15px; display:flex; gap:10px; align-items:flex-end; flex-wrap: wrap;">
+            <div style="flex:1; min-width: 150px;">
+                <label style="font-weight:bold; display:block; margin-bottom:5px; color:#333;">Blood Group:</label>
+                <select id="filterBloodGroup" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                    <option value="All">All Blood Groups</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                </select>
+            </div>
+            <div style="flex:1; min-width: 150px;">
+                <label style="font-weight:bold; display:block; margin-bottom:5px; color:#333;">Status:</label>
+                <select id="filterStatus" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                    <option value="All">All Statuses</option>
+                    <option value="Active">Active</option>
+                    <option value="Rest">Rest</option>
+                </select>
+            </div>
+            <button class="btn-submit" style="width:auto; background-color:#0056b3; padding: 10px 15px;" onclick="applyFilters()">Filter</button>
+            <button class="btn-submit" style="width:auto; background-color:#28a745; padding: 10px 15px;" onclick="exportToTxt()">Export List</button>
+        </div>
+
         <div class="table-responsive">
-        <h2>Donor Database</h2>
-        <div id="message">Loading database...</div>
+            <h2>Donor Database</h2>
+            <div id="message">Loading database...</div>
             <table>
                 <thead>
                     <tr>
@@ -37,24 +63,10 @@
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody id="donorTableBody">
-                    <!-- Data will be injected here by JavaScript -->
-                </tbody>
+                <tbody id="donorTableBody"></tbody>
             </table>
         </div>
     </div>
-
-    <script>
-		(function() {
-        const currentUrl = window.location.href;
-        if (currentUrl.includes('.html')) 
-        {
-            const cleanUrl = currentUrl.replace(/\.html/g, '');
-            window.history.replaceState(null, null, cleanUrl);
-        }
-    })();
-	</script>
-    
     <script src="../js/view_donors.js"></script>
 </body>
 </html>
