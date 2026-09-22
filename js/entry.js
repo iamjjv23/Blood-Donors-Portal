@@ -140,11 +140,19 @@ document.getElementById('donorForm').addEventListener('submit', async (e) => {
         if (isEditing) {
             const { error } = await supabaseClient.from('donors').update(payload).eq('id', editId);
             if (error) throw error;
+            
+            // Log the edit action
+            await supabaseClient.from('activity_logs').insert({ user_id: currentUserId, action_details: `Updated details for Donor: ${payload.name}` });
+            
             msgDiv.innerHTML = `Success! Donor updated.`;
         } else {
             payload.entered_by = currentUserId;
             const { error } = await supabaseClient.from('donors').insert(payload);
             if (error) throw error;
+            
+            // Log the creation action
+            await supabaseClient.from('activity_logs').insert({ user_id: currentUserId, action_details: `Registered new Donor: ${payload.name}` });
+            
             msgDiv.innerHTML = `Success! Donor registered.`;
         }
         msgDiv.style.color = 'green';
@@ -152,7 +160,7 @@ document.getElementById('donorForm').addEventListener('submit', async (e) => {
     } catch (error) {
         msgDiv.textContent = 'Error: ' + error.message;
         msgDiv.style.color = 'red';
-        if (error.message.includes('unique constraint')) {
+        if (error.message && error.message.includes('unique constraint')) {
             alert("This contact number is already registered!");
         }
     }
