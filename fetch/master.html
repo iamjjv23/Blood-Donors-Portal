@@ -135,17 +135,24 @@
             </div>
         </div>
 
-        <div id="settingsSection" class="section">
+        <div id="logsSection" class="section">
             <div class="stats-box">
-                <form id="settingsForm">
-                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color: #333; margin-top:0;">Connect Database</h3>
-                    <div class="form-group">
-                        <label for="donorSheetId">Donor Database ID:</label>
-                        <input type="text" id="donorSheetId" required placeholder="Paste the Google Sheet ID here">
-                        <small style="color: #666; display: block; margin-top: 5px;">Enter the exact ID of your External Database Sheet.</small>
-                    </div>
-                    <button type="submit" class="btn-submit">Save Database Configuration</button>
-                </form>
+                <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; color: #333; margin-top:0;">System Activity Logs</h3>
+                <p style="color: #666; margin-bottom: 15px;">Showing the 50 most recent actions performed across the portal.</p>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>User</th>
+                                <th>Action Performed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                            <tr><td colspan="3">Loading logs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         
