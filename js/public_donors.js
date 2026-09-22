@@ -55,6 +55,7 @@ function renderTable(donorsArray) {
     }
 
     donorsArray.forEach(donor => {
+        // Matched your exact styling and emoji placement
         const statusDisplay = donor.status === 'Active' ? '🟢 Active' : '🩸 Rest';
         const statusColor = donor.status === 'Active' ? '#78B159' : '#DD2E44';
 
