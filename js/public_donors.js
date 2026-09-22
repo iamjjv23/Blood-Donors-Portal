@@ -1,32 +1,27 @@
-const supabaseUrl = 'https://pkjrqjaavmxhegktwuuk.supabase.co/rest/v1/';
+const supabaseUrl = 'https://pkjrqjaavmxhegktwuuk.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBranJxamFhdm14aGVna3R3dXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNzM1MDIsImV4cCI6MjEwNTY0OTUwMn0.TQLtFxYw6pROFdnlnFpZ-B7duqSywnCnEOHtS6T_Xwc';
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-
-
 
 let allDonorsCache = [];
 let currentRenderedDonors = [];
 
-window.onload = () => {
-    fetchPublicDonors();
-};
+window.onload = () => fetchPublicDonors();
 
 async function fetchPublicDonors() {
     const msgDiv = document.getElementById('message');
     
     try {
-        const response = await fetch(`${API}?action=getPublicDonors`);
-        const result = await response.json();
+        const { data, error } = await supabaseClient
+            .from('donors_with_status')
+            .select('*')
+            .order('name', { ascending: true });
 
-        if (result.status === 'success') {
-            msgDiv.style.display = 'none'; 
-            allDonorsCache = result.donors || [];
-            applyFilters(); 
-        } else {
-            msgDiv.textContent = 'Error: ' + result.message;
-            msgDiv.style.color = 'red';
-        }
+        if (error) throw error;
+
+        msgDiv.style.display = 'none'; 
+        // Securely mask contacts on the client side for public viewing
+        allDonorsCache = (data || []).map(donor => ({...donor, contact: 'Hidden 🔒'}));
+        applyFilters(); 
     } catch (error) {
         msgDiv.textContent = 'Connection error while fetching data.';
         msgDiv.style.color = 'red';
@@ -39,12 +34,8 @@ function applyFilters() {
     
     let filteredData = allDonorsCache;
     
-    if (bgFilter !== 'All') {
-        filteredData = filteredData.filter(d => d.bloodGroup === bgFilter);
-    }
-    if (statusFilter !== 'All') {
-        filteredData = filteredData.filter(d => d.status === statusFilter);
-    }
+    if (bgFilter !== 'All') filteredData = filteredData.filter(d => d.blood_group === bgFilter);
+    if (statusFilter !== 'All') filteredData = filteredData.filter(d => d.status === statusFilter);
     
     currentRenderedDonors = filteredData;
     renderTable(filteredData);
@@ -60,17 +51,15 @@ function renderTable(donorsArray) {
     }
 
     donorsArray.forEach(donor => {
-        // Matched your exact styling and emoji placement
         const statusDisplay = donor.status === 'Active' ? '🟢 Active' : '🩸 Rest';
         const statusColor = donor.status === 'Active' ? '#78B159' : '#DD2E44';
 
-        const row = `<tr>
+        tableBody.innerHTML += `<tr>
             <td><strong>${donor.name}</strong></td>
-            <td><span class="blood-badge">${donor.bloodGroup}</span></td>
+            <td><span class="blood-badge">${donor.blood_group}</span></td>
             <td style="color: #666; font-style: italic;">${donor.contact}</td>
             <td>${donor.location}</td>
             <td style="color: ${statusColor}; font-weight: bold;">${statusDisplay}</td>
         </tr>`;
-        tableBody.innerHTML += row;
     });
 }
