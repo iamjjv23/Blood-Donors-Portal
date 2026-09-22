@@ -30,14 +30,23 @@ function showSection(sectionId, clickedBtn) {
 }
 
 async function fetchMasterStats() {
+    const msgDiv = document.getElementById('message');
     try {
-        const { data: users } = await supabaseClient.from('users').select('*');
-        const { data: donors } = await supabaseClient.from('donors').select('entered_by');
+        // Explicit Error Checking added here
+        const { data: users, error: userErr } = await supabaseClient.from('users').select('*');
+        if (userErr) throw new Error("Users Data Error: " + userErr.message);
+
+        const { data: donors, error: donorErr } = await supabaseClient.from('donors').select('entered_by');
+        if (donorErr) throw new Error("Donors Data Error: " + donorErr.message);
         
-        document.getElementById('masterTotalDonors').textContent = donors.length;
+        // Safe fallbacks to prevent crashes if table is empty
+        const safeUsers = users || [];
+        const safeDonors = donors || [];
+        
+        document.getElementById('masterTotalDonors').textContent = safeDonors.length;
         
         globalHierarchy = {};
-        users.forEach(u => {
+        safeUsers.forEach(u => {
             if (u.role === 'Organiser_user') {
                 globalHierarchy[u.id] = { orgName: u.username, totalDonors: 0, deCount: 0, breakdownMap: {} };
                 globalHierarchy[u.id].breakdownMap[u.id] = { name: '[Organiser Direct Entry]', count: 0 };
@@ -45,16 +54,16 @@ async function fetchMasterStats() {
         });
         globalHierarchy['master'] = { orgName: 'Master Admin Direct Entries', totalDonors: 0, deCount: 0, breakdownMap: { 'master': { name: '[Master Direct]', count: 0 } } };
 
-        users.forEach(u => {
+        safeUsers.forEach(u => {
             if (u.role === 'Data_entry_user' && globalHierarchy[u.created_by]) {
                 globalHierarchy[u.created_by].deCount++;
                 globalHierarchy[u.created_by].breakdownMap[u.id] = { name: u.username, count: 0 };
             }
         });
 
-        donors.forEach(d => {
+        safeDonors.forEach(d => {
             const enteredBy = d.entered_by;
-            const userObj = users.find(u => u.id === enteredBy);
+            const userObj = safeUsers.find(u => u.id === enteredBy);
             if (userObj) {
                 if (userObj.role === 'Organiser_user' && globalHierarchy[enteredBy]) {
                     globalHierarchy[enteredBy].totalDonors++;
@@ -91,7 +100,12 @@ async function fetchMasterStats() {
             }
         }
         document.getElementById('masterTotalOrgs').textContent = orgCount;
-    } catch (error) { console.error(error); }
+        
+    } catch (error) { 
+        console.error(error);
+        msgDiv.textContent = 'Failed to load stats: ' + error.message;
+        msgDiv.style.color = 'red';
+    }
 }
 
 function showHierarchySection() {
@@ -155,8 +169,9 @@ async function fetchUserDonors(targetUserId, rawName, orgId) {
     tbody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
     
     try {
-        const { data: donors } = await supabaseClient.from('donors_with_status').select('*').eq('entered_by', targetUserId);
-        
+        const { data: donors, error } = await supabaseClient.from('donors_with_status').select('*').eq('entered_by', targetUserId);
+        if (error) throw error;
+
         tbody.innerHTML = '';
         if (!donors || donors.length === 0) return tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No donors entered by this user.</td></tr>';
         
@@ -184,7 +199,9 @@ async function fetchUserDonors(targetUserId, rawName, orgId) {
 async function deleteDonorRecord(donorId) {
     if(!confirm("Are you sure you want to delete this donor? This action cannot be undone.")) return;
     try {
-        await supabaseClient.from('donors').delete().eq('id', donorId);
+        const { error } = await supabaseClient.from('donors').delete().eq('id', donorId);
+        if (error) throw error;
+        
         const section = document.getElementById('individualDonorsSection');
         fetchUserDonors(section.dataset.currentUser, section.dataset.currentName, section.dataset.currentOrgId);
         fetchMasterStats();
@@ -193,14 +210,18 @@ async function deleteDonorRecord(donorId) {
 
 async function fetchMasterConfig() {
     try {
-        const { data: camps } = await supabaseClient.from('camps').select('name');
-        masterCamps = camps.map(c => c.name);
+        const { data: camps, error: campErr } = await supabaseClient.from('camps').select('name');
+        if (campErr) throw campErr;
+        masterCamps = (camps || []).map(c => c.name);
         renderCampsUI();
         
-        const { data: orgs } = await supabaseClient.from('users').select('*').eq('role', 'Organiser_user');
+        const { data: orgs, error: orgErr } = await supabaseClient.from('users').select('*').eq('role', 'Organiser_user');
+        if (orgErr) throw orgErr;
         masterOrganisers = orgs || [];
         populateCampDropdowns();
-    } catch (e) {}
+    } catch (e) {
+        console.error("Config load error: ", e);
+    }
 }
 
 function renderCampsUI() {
@@ -233,7 +254,8 @@ async function addCamp() {
     const val = document.getElementById('newCampInput').value.trim();
     if(!val) return;
     try {
-        await supabaseClient.from('camps').insert({name: val});
+        const { error } = await supabaseClient.from('camps').insert({name: val});
+        if (error) throw error;
         document.getElementById('newCampInput').value = '';
         fetchMasterConfig();
     } catch(e) { alert("Error adding camp."); }
@@ -242,7 +264,8 @@ async function addCamp() {
 async function deleteCamp(campName) {
     if(!confirm("Delete this camp from the master list?")) return;
     try {
-        await supabaseClient.from('camps').delete().eq('name', campName);
+        const { error } = await supabaseClient.from('camps').delete().eq('name', campName);
+        if (error) throw error;
         fetchMasterConfig();
     } catch(e) { alert('Error deleting camp (ensure no donors depend on it).'); }
 }
@@ -252,7 +275,8 @@ async function assignDefaultCamp() {
     const campName = document.getElementById('assignCampSelect').value;
     if(!orgId || !campName) return;
     try {
-        await supabaseClient.from('users').update({default_camp: campName}).eq('id', orgId);
+        const { error } = await supabaseClient.from('users').update({default_camp: campName}).eq('id', orgId);
+        if (error) throw error;
         fetchOrganisersList(); 
     } catch(e) { alert('Connection failed.'); }
 }
@@ -260,7 +284,9 @@ async function assignDefaultCamp() {
 async function fetchOrganisersList() {
     const tbody = document.getElementById('orgTableBody');
     try {
-        const { data: organisers } = await supabaseClient.from('users').select('*').eq('role', 'Organiser_user');
+        const { data: organisers, error } = await supabaseClient.from('users').select('*').eq('role', 'Organiser_user');
+        if (error) throw error;
+
         tbody.innerHTML = '';
         if (!organisers || organisers.length === 0) return tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No organisers found.</td></tr>';
         
@@ -268,11 +294,11 @@ async function fetchOrganisersList() {
             const safeId = org.id.replace(/'/g, "\\'");
             const safeUser = org.username.replace(/'/g, "\\'");
             const safePass = org.password.replace(/'/g, "\\'");
-            const safeCamp = org.default_camp.replace(/'/g, "\\'");
+            const safeCamp = (org.default_camp || 'General').replace(/'/g, "\\'");
             tbody.innerHTML += `<tr>
                 <td><strong>${org.username}</strong></td>
                 <td>${org.password}</td>
-                <td style="color:#0056b3; font-weight:bold;">${org.default_camp}</td>
+                <td style="color:#0056b3; font-weight:bold;">${org.default_camp || 'General'}</td>
                 <td>
                     <button class="btn-sm btn-edit" onclick="triggerEdit('${safeId}', '${safeUser}', '${safePass}', '${safeCamp}')">Edit</button>
                     <button class="btn-sm btn-delete" onclick="deleteOrganiser('${safeId}')">Delete</button>
@@ -293,10 +319,12 @@ document.getElementById('orgForm').addEventListener('submit', async (e) => {
 
     try {
         if (orgId) {
-            await supabaseClient.from('users').update(payload).eq('id', orgId);
+            const { error } = await supabaseClient.from('users').update(payload).eq('id', orgId);
+            if (error) throw error;
         } else {
             payload.role = 'Organiser_user';
-            await supabaseClient.from('users').insert(payload);
+            const { error } = await supabaseClient.from('users').insert(payload);
+            if (error) throw error;
         }
         resetOrgForm();
         fetchOrganisersList(); 
@@ -326,7 +354,8 @@ function resetOrgForm() {
 async function deleteOrganiser(id) {
     if (!confirm('Are you sure you want to delete this Organiser?')) return;
     try {
-        await supabaseClient.from('users').delete().eq('id', id);
+        const { error } = await supabaseClient.from('users').delete().eq('id', id);
+        if (error) throw error;
         fetchOrganisersList();
         fetchMasterStats();
     } catch (error) { alert('Error: Cannot delete an Organiser that has active donors linked to their team.'); }
