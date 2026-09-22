@@ -1,8 +1,6 @@
-const supabaseUrl = 'https://pkjrqjaavmxhegktwuuk.supabase.co/rest/v1/';
+const supabaseUrl = 'https://pkjrqjaavmxhegktwuuk.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBranJxamFhdm14aGVna3R3dXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwNzM1MDIsImV4cCI6MjEwNTY0OTUwMn0.TQLtFxYw6pROFdnlnFpZ-B7duqSywnCnEOHtS6T_Xwc';
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-
 
 const token = localStorage.getItem('token');
 const role = localStorage.getItem('role');
@@ -14,7 +12,7 @@ let currentRenderedDonors = [];
 window.onload = () => {
     if (!token) {
         alert('Unauthorized access. Redirecting to login.');
-        window.location.href = '../index.html'; // FIXED
+        window.location.href = '../index.html'; 
         return;
     }
     fetchDonors();
@@ -25,17 +23,17 @@ async function fetchDonors() {
     const msgDiv = document.getElementById('message');
     
     try {
-        const response = await fetch(`${API}?action=getAllDonors&token=${token}`);
-        const result = await response.json();
+        let query = supabaseClient.from('donors_with_status').select('*').order('name', { ascending: true });
+        
+        // If Data Entry user, only show their own records (Role Based Access Control)
+        if (role === 'Data_entry_user') query = query.eq('entered_by', currentUserId);
+        
+        const { data, error } = await query;
+        if (error) throw error;
 
-        if (result.status === 'success') {
-            msgDiv.style.display = 'none'; 
-            allDonorsCache = result.donors || [];
-            applyFilters();
-        } else {
-            msgDiv.textContent = 'Error: ' + result.message;
-            msgDiv.style.color = 'red';
-        }
+        msgDiv.style.display = 'none'; 
+        allDonorsCache = data || [];
+        applyFilters();
     } catch (error) {
         msgDiv.textContent = 'Connection error while fetching data.';
         msgDiv.style.color = 'red';
@@ -48,12 +46,8 @@ function applyFilters() {
     
     let filteredData = allDonorsCache;
     
-    if (bgFilter !== 'All') {
-        filteredData = filteredData.filter(d => d.bloodGroup === bgFilter);
-    }
-    if (statusFilter !== 'All') {
-        filteredData = filteredData.filter(d => d.status === statusFilter);
-    }
+    if (bgFilter !== 'All') filteredData = filteredData.filter(d => d.blood_group === bgFilter);
+    if (statusFilter !== 'All') filteredData = filteredData.filter(d => d.status === statusFilter);
     
     currentRenderedDonors = filteredData;
     renderTable(filteredData);
@@ -69,15 +63,13 @@ function renderTable(donorsArray) {
     }
 
     donorsArray.forEach(donor => {
-        // FIXED: Added .html
         let actionsHtml = `<a href="donor.html?id=${donor.id}" class="btn-view">View</a>`;
         
         let canEdit = false;
         if (role === 'Master_admin' || role === 'Organiser_user') canEdit = true;
-        else if (role === 'Data_entry_user' && donor.enteredBy === currentUserId) canEdit = true;
+        else if (role === 'Data_entry_user' && donor.entered_by === currentUserId) canEdit = true;
 
         if (canEdit) {
-            // FIXED: Added .html
             actionsHtml += ` <button class="btn-sm btn-edit" style="margin-left: 5px;" onclick="window.location.href='data_entry.html?edit=${donor.id}'">Edit</button>`;
         }
         
@@ -88,30 +80,23 @@ function renderTable(donorsArray) {
         const statusDisplay = donor.status === 'Active' ? '🟢 Active' : '🩸 Rest';
         const statusColor = donor.status === 'Active' ? '#78B159' : '#DD2E44';
 
-        const row = `<tr>
+        tableBody.innerHTML += `<tr>
             <td><strong>${donor.name}</strong></td>
-            <td><span class="blood-badge">${donor.bloodGroup}</span></td>
+            <td><span class="blood-badge">${donor.blood_group}</span></td>
             <td>${donor.contact}</td>
             <td>${donor.location}</td>
             <td style="color: ${statusColor}; font-weight: bold;">${statusDisplay}</td>
             <td>${actionsHtml}</td>
         </tr>`;
-        tableBody.innerHTML += row;
     });
 }
 
 function exportToTxt() {
-    if (currentRenderedDonors.length === 0) {
-        alert("No donors to export.");
-        return;
-    }
-    
+    if (currentRenderedDonors.length === 0) return alert("No donors to export.");
     let txtContent = "Blood Donors List\n==================\n\n";
-    
     currentRenderedDonors.forEach((donor, index) => {
-        txtContent += `${index + 1}. Name : ${donor.name}\n   Blood Group : ${donor.bloodGroup}\n   Address : ${donor.location}\n   Mobile: ${donor.contact}\n\n`;
+        txtContent += `${index + 1}. Name : ${donor.name}\n   Blood Group : ${donor.blood_group}\n   Address : ${donor.location}\n   Mobile: ${donor.contact}\n\n`;
     });
-    
     const blob = new Blob([txtContent], { type: "text/plain;charset=utf-8" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -121,33 +106,19 @@ function exportToTxt() {
 
 async function deleteDonorRecord(donorId) {
     if (!confirm("Are you sure you want to delete this donor? This action cannot be undone.")) return;
-    
-    const msgDiv = document.getElementById('message');
-    msgDiv.style.display = 'block';
-    msgDiv.textContent = 'Deleting donor...';
-    
-    const payload = { action: 'deleteDonorRecord', token: token, donorId: donorId };
+    document.getElementById('message').style.display = 'block';
+    document.getElementById('message').textContent = 'Deleting donor...';
     
     try {
-        const response = await fetch(API, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload) 
-        });
-        const result = await response.json();
-        
-        if (result.status === 'success') {
-            fetchDonors(); 
-        } else {
-            alert('Error: ' + result.message);
-        }
+        const { error } = await supabaseClient.from('donors').delete().eq('id', donorId);
+        if (error) throw error;
+        fetchDonors(); 
     } catch (e) {
         alert('Connection failed while deleting.');
     }
 }
 
 function goBack() {
-    // FIXED: Added .html
     if (role === 'Master_admin') window.location.href = 'master.html';
     else if (role === 'Organiser_user') window.location.href = 'organiser.html';
     else if (role === 'Data_entry_user') window.location.href = 'data_entry.html';
@@ -156,5 +127,5 @@ function goBack() {
 
 function logout() {
     localStorage.clear();
-    window.location.href = '../index.html'; // FIXED
+    window.location.href = '../index.html';
 }
