@@ -72,7 +72,7 @@ function renderTable(donorsArray) {
     tableBody.innerHTML = '';
     
     if (donorsArray.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No donors found matching criteria.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No donor entries under your organiser.</td></tr>';
         return;
     }
 
