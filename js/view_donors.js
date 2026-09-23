@@ -25,8 +25,22 @@ async function fetchDonors() {
     try {
         let query = supabaseClient.from('donors_with_status').select('*').order('name', { ascending: true });
         
-        // If Data Entry user, only show their own records (Role Based Access Control)
-        if (role === 'Data_entry_user') query = query.eq('entered_by', currentUserId);
+        if (role === 'Data_entry_user') {
+            // Only fetch this specific user's entries
+            query = query.eq('entered_by', currentUserId);
+        } 
+        else if (role === 'Organiser_user') {
+            // Find all Data Entry users created by this Organiser
+            const { data: teamUsers } = await supabaseClient.from('users').select('id').eq('created_by', currentUserId);
+            
+            // Build an array of the Organiser's ID + their team's IDs
+            const teamIds = (teamUsers || []).map(u => u.id);
+            teamIds.push(currentUserId); 
+            
+            // Filter the donors to only show those logged by this specific team
+            query = query.in('entered_by', teamIds);
+        }
+        // If Master_admin, no filters are applied so they see everything
         
         const { data, error } = await query;
         if (error) throw error;
@@ -65,6 +79,7 @@ function renderTable(donorsArray) {
     donorsArray.forEach(donor => {
         let actionsHtml = `<a href="donor.html?id=${donor.id}" class="btn-view">View</a>`;
         
+        // Since the array is already filtered perfectly, we just assign edit rights logically
         let canEdit = false;
         if (role === 'Master_admin' || role === 'Organiser_user') canEdit = true;
         else if (role === 'Data_entry_user' && donor.entered_by === currentUserId) canEdit = true;
