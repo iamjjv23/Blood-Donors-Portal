@@ -75,12 +75,24 @@ async function loadDonorForEdit(editId) {
         
         msgDiv.textContent = '';
         
+        // Strict URL Hierarchy Verification
         let canEdit = false;
-        if (role === 'Master_admin' || role === 'Organiser_user') canEdit = true;
-        else if (role === 'Data_entry_user' && donor.entered_by === currentUserId) canEdit = true;
+        
+        if (role === 'Master_admin') {
+            canEdit = true;
+        } else if (role === 'Data_entry_user') {
+            if (donor.entered_by === currentUserId) canEdit = true;
+        } else if (role === 'Organiser_user') {
+            const { data: teamUsers } = await supabaseClient.from('users').select('id').eq('created_by', currentUserId);
+            const teamIds = (teamUsers || []).map(u => u.id);
+            teamIds.push(currentUserId);
+            
+            // Only allow edit if the donor's author is inside the Organiser's team array
+            if (teamIds.includes(donor.entered_by)) canEdit = true;
+        }
 
         if (!canEdit) {
-            alert("You don't have permission to edit this record.");
+            alert("Security Error: You do not have permission to edit this record.");
             window.location.href = `donor.html?id=${donor.id}`;
             return;
         }
