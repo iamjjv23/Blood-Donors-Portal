@@ -19,7 +19,7 @@ window.onload = () => {
     }
 };
 
-// --- NEW: Global Logging Function ---
+// --- Global Logging Function ---
 async function logActivity(actionDetails) {
     try {
         await supabaseClient.from('activity_logs').insert({
@@ -41,10 +41,10 @@ function showSection(sectionId, clickedBtn) {
     document.getElementById('message').textContent = '';
     
     if (sectionId === 'manageSection') fetchOrganisersList();
-    if (sectionId === 'logsSection') fetchActivityLogs(); // Fetch logs when tab is clicked
+    if (sectionId === 'logsSection') fetchActivityLogs(); 
 }
 
-// --- NEW: Fetch and Render Logs ---
+// --- Fetch and Render Logs ---
 async function fetchActivityLogs() {
     const tbody = document.getElementById('logsTableBody');
     tbody.innerHTML = '<tr><td colspan="3">Refreshing logs...</td></tr>';
@@ -276,13 +276,19 @@ async function fetchMasterConfig() {
     }
 }
 
+// --- UPDATED: Added Edit Button logic here ---
 function renderCampsUI() {
     const tbody = document.getElementById('campsTableBody');
     tbody.innerHTML = '';
     masterCamps.forEach((camp) => {
+        // Safe string formatting for function calls
+        const safeCamp = camp.replace(/'/g, "\\'"); 
         tbody.innerHTML += `<tr>
             <td><strong>${camp}</strong></td>
-            <td><button class="btn-sm btn-delete" onclick="deleteCamp('${camp}')">Delete</button></td>
+            <td>
+                <button class="btn-sm btn-edit" style="margin-right: 5px;" onclick="editCamp('${safeCamp}')">Edit</button>
+                <button class="btn-sm btn-delete" onclick="deleteCamp('${safeCamp}')">Delete</button>
+            </td>
         </tr>`;
     });
 }
@@ -314,6 +320,29 @@ async function addCamp() {
         document.getElementById('newCampInput').value = '';
         fetchMasterConfig();
     } catch(e) { alert("Error adding camp."); }
+}
+
+// --- NEW: Edit Camp Function ---
+async function editCamp(oldCampName) {
+    const newCampName = prompt("Enter the new name for this camp:", oldCampName);
+    
+    // Check if the user typed something new and didn't hit Cancel
+    if (newCampName !== null && newCampName.trim() !== "" && newCampName.trim() !== oldCampName) {
+        const trimmedName = newCampName.trim();
+        try {
+            const { error } = await supabaseClient
+                .from('camps')
+                .update({ name: trimmedName })
+                .eq('name', oldCampName);
+            
+            if (error) throw error;
+            
+            await logActivity(`Renamed camp from '${oldCampName}' to '${trimmedName}'`);
+            fetchMasterConfig(); // Refresh the list
+        } catch(e) {
+            alert("Error updating camp. Note: You cannot rename a camp if it is currently set as a default camp for an organiser.");
+        }
+    }
 }
 
 async function deleteCamp(campName) {
