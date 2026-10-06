@@ -19,7 +19,6 @@ window.onload = () => {
     }
 };
 
-// --- Global Logging Function ---
 async function logActivity(actionDetails) {
     try {
         await supabaseClient.from('activity_logs').insert({
@@ -44,7 +43,6 @@ function showSection(sectionId, clickedBtn) {
     if (sectionId === 'logsSection') fetchActivityLogs(); 
 }
 
-// --- Fetch and Render Logs ---
 async function fetchActivityLogs() {
     const tbody = document.getElementById('logsTableBody');
     tbody.innerHTML = '<tr><td colspan="3">Refreshing logs...</td></tr>';
@@ -52,7 +50,7 @@ async function fetchActivityLogs() {
     try {
         const { data: logs, error } = await supabaseClient
             .from('activity_logs')
-            .select(`action_details, created_at, users ( username )`)
+            .select(`action_details, created_at, users ( username, name )`)
             .order('created_at', { ascending: false })
             .limit(50);
 
@@ -68,7 +66,7 @@ async function fetchActivityLogs() {
             const dateStr = new Date(log.created_at).toLocaleString('en-GB', { 
                 day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
             });
-            const userName = log.users ? log.users.username : 'Deleted User';
+            const userName = log.users ? (log.users.name || log.users.username) : 'Deleted User';
             
             tbody.innerHTML += `<tr>
                 <td style="color: #666; font-size: 0.9em;">${dateStr}</td>
@@ -98,7 +96,9 @@ async function fetchMasterStats() {
         globalHierarchy = {};
         safeUsers.forEach(u => {
             if (u.role === 'Organiser_user') {
-                globalHierarchy[u.id] = { orgName: u.username, totalDonors: 0, deCount: 0, breakdownMap: {} };
+                // UPDATED: Uses Full Name for display in Overview
+                const displayName = u.name || u.username;
+                globalHierarchy[u.id] = { orgName: displayName, totalDonors: 0, deCount: 0, breakdownMap: {} };
                 globalHierarchy[u.id].breakdownMap[u.id] = { name: '[Organiser Direct Entry]', count: 0 };
             }
         });
@@ -107,7 +107,8 @@ async function fetchMasterStats() {
         safeUsers.forEach(u => {
             if (u.role === 'Data_entry_user' && globalHierarchy[u.created_by]) {
                 globalHierarchy[u.created_by].deCount++;
-                globalHierarchy[u.created_by].breakdownMap[u.id] = { name: u.username, count: 0 };
+                const displayName = u.name || u.username;
+                globalHierarchy[u.created_by].breakdownMap[u.id] = { name: displayName, count: 0 };
             }
         });
 
@@ -120,7 +121,8 @@ async function fetchMasterStats() {
                     globalHierarchy[enteredBy].breakdownMap[enteredBy].count++;
                 } else if (userObj.role === 'Data_entry_user' && globalHierarchy[userObj.created_by]) {
                     globalHierarchy[userObj.created_by].totalDonors++;
-                    if(!globalHierarchy[userObj.created_by].breakdownMap[enteredBy]) globalHierarchy[userObj.created_by].breakdownMap[enteredBy] = {name: userObj.username, count: 0};
+                    const displayName = userObj.name || userObj.username;
+                    if(!globalHierarchy[userObj.created_by].breakdownMap[enteredBy]) globalHierarchy[userObj.created_by].breakdownMap[enteredBy] = {name: displayName, count: 0};
                     globalHierarchy[userObj.created_by].breakdownMap[enteredBy].count++;
                 } else if (userObj.role === 'Master_admin') {
                     globalHierarchy['master'].totalDonors++;
@@ -276,12 +278,10 @@ async function fetchMasterConfig() {
     }
 }
 
-// --- UPDATED: Added Edit Button logic here ---
 function renderCampsUI() {
     const tbody = document.getElementById('campsTableBody');
     tbody.innerHTML = '';
     masterCamps.forEach((camp) => {
-        // Safe string formatting for function calls
         const safeCamp = camp.replace(/'/g, "\\'"); 
         tbody.innerHTML += `<tr>
             <td><strong>${camp}</strong></td>
@@ -304,7 +304,10 @@ function populateCampDropdowns() {
     const orgSelect = document.getElementById('assignOrgSelect');
     if(orgSelect) {
         orgSelect.innerHTML = '';
-        masterOrganisers.forEach(org => { orgSelect.innerHTML += `<option value="${org.id}">${org.username}</option>`; });
+        masterOrganisers.forEach(org => { 
+            const displayName = org.name || org.username;
+            orgSelect.innerHTML += `<option value="${org.id}">${displayName}</option>`; 
+        });
     }
 }
 
@@ -322,23 +325,15 @@ async function addCamp() {
     } catch(e) { alert("Error adding camp."); }
 }
 
-// --- NEW: Edit Camp Function ---
 async function editCamp(oldCampName) {
     const newCampName = prompt("Enter the new name for this camp:", oldCampName);
-    
-    // Check if the user typed something new and didn't hit Cancel
     if (newCampName !== null && newCampName.trim() !== "" && newCampName.trim() !== oldCampName) {
         const trimmedName = newCampName.trim();
         try {
-            const { error } = await supabaseClient
-                .from('camps')
-                .update({ name: trimmedName })
-                .eq('name', oldCampName);
-            
+            const { error } = await supabaseClient.from('camps').update({ name: trimmedName }).eq('name', oldCampName);
             if (error) throw error;
-            
             await logActivity(`Renamed camp from '${oldCampName}' to '${trimmedName}'`);
-            fetchMasterConfig(); // Refresh the list
+            fetchMasterConfig(); 
         } catch(e) {
             alert("Error updating camp. Note: You cannot rename a camp if it is currently set as a default camp for an organiser.");
         }
@@ -364,7 +359,7 @@ async function assignDefaultCamp() {
         const { error } = await supabaseClient.from('users').update({default_camp: campName}).eq('id', orgId);
         if (error) throw error;
         
-        const orgName = masterOrganisers.find(o => o.id === orgId)?.username || 'Unknown';
+        const orgName = masterOrganisers.find(o => o.id === orgId)?.name || masterOrganisers.find(o => o.id === orgId)?.username || 'Unknown';
         await logActivity(`Assigned default camp '${campName}' to Organiser '${orgName}'`);
         
         fetchOrganisersList(); 
@@ -378,30 +373,35 @@ async function fetchOrganisersList() {
         if (error) throw error;
 
         tbody.innerHTML = '';
-        if (!organisers || organisers.length === 0) return tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No organisers found.</td></tr>';
+        if (!organisers || organisers.length === 0) return tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No organisers found.</td></tr>';
         
         organisers.forEach(org => {
             const safeId = org.id.replace(/'/g, "\\'");
+            const safeName = (org.name || '').replace(/'/g, "\\'");
             const safeUser = org.username.replace(/'/g, "\\'");
             const safePass = org.password.replace(/'/g, "\\'");
             const safeCamp = (org.default_camp || 'General').replace(/'/g, "\\'");
             tbody.innerHTML += `<tr>
-                <td><strong>${org.username}</strong></td>
+                <td><strong>${org.name || '-'}</strong></td>
+                <td>${org.username}</td>
                 <td>${org.password}</td>
                 <td style="color:#0056b3; font-weight:bold;">${org.default_camp || 'General'}</td>
                 <td>
-                    <button class="btn-sm btn-edit" onclick="triggerEdit('${safeId}', '${safeUser}', '${safePass}', '${safeCamp}')">Edit</button>
+                    <button class="btn-sm btn-edit" onclick="triggerEdit('${safeId}', '${safeName}', '${safeUser}', '${safePass}', '${safeCamp}')">Edit</button>
                     <button class="btn-sm btn-delete" onclick="deleteOrganiser('${safeId}', '${safeUser}')">Delete</button>
                 </td>
             </tr>`;
         });
-    } catch (error) { tbody.innerHTML = '<tr><td colspan="4" style="color:red">Error loading organisers.</td></tr>'; }
+    } catch (error) { tbody.innerHTML = '<tr><td colspan="5" style="color:red">Error loading organisers.</td></tr>'; }
 }
 
 document.getElementById('orgForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const orgId = document.getElementById('orgId').value;
+    
+    // UPDATED: Now includes name in the payload
     const payload = {
+        name: document.getElementById('orgName').value.trim(),
         username: document.getElementById('orgUsername').value.trim(),
         password: document.getElementById('orgPassword').value,
         default_camp: document.getElementById('orgDefaultCamp').value 
@@ -411,24 +411,28 @@ document.getElementById('orgForm').addEventListener('submit', async (e) => {
         if (orgId) {
             const { error } = await supabaseClient.from('users').update(payload).eq('id', orgId);
             if (error) throw error;
-            await logActivity(`Updated Organiser credentials for: ${payload.username}`);
+            await logActivity(`Updated Organiser credentials for: ${payload.name || payload.username}`);
         } else {
             payload.role = 'Organiser_user';
             const { error } = await supabaseClient.from('users').insert(payload);
             if (error) throw error;
-            await logActivity(`Created new Organiser: ${payload.username}`);
+            await logActivity(`Created new Organiser: ${payload.name || payload.username}`);
         }
         resetOrgForm();
         fetchOrganisersList(); 
         fetchMasterConfig(); 
+        fetchMasterStats(); // Refresh overview to show new name instantly
     } catch (error) { alert('Error updating database. Username may already exist.'); }
 });
 
-function triggerEdit(id, username, password, camp) {
+// UPDATED: Receives and sets the name parameter
+function triggerEdit(id, name, username, password, camp) {
     document.getElementById('orgId').value = id;
+    document.getElementById('orgName').value = name;
     document.getElementById('orgUsername').value = username;
     document.getElementById('orgPassword').value = password;
     document.getElementById('orgDefaultCamp').value = camp; 
+    
     document.getElementById('orgFormTitle').textContent = 'Edit Organiser';
     document.getElementById('orgSubmitBtn').textContent = 'Update Details';
     document.getElementById('orgCancelBtn').style.display = 'block';
