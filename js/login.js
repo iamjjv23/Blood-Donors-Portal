@@ -28,6 +28,15 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             return;
         }
 
+        // ==========================================
+        // NEW: CHECK IF ACCOUNT IS DEACTIVATED
+        // ==========================================
+        if (data.is_active === false) {
+            msgDiv.textContent = 'Account Deactivated. Please contact the Master Admin.';
+            msgDiv.style.color = '#ff4e4e';
+            return; // Stops the login process completely
+        }
+
         msgDiv.textContent = 'Login successful! Redirecting...';
         msgDiv.style.color = '#4caf50';
         
