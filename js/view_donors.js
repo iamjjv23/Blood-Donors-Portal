@@ -19,30 +19,34 @@ window.onload = () => {
 };
 
 async function fetchDonors() {
+    const tableBody = document.getElementById('donorTableBody');
     const msgDiv = document.getElementById('message');
     
     try {
         let query = supabaseClient.from('donors_with_status').select('*').order('name', { ascending: true });
         
         if (role === 'Data_entry_user') {
+            // Only fetch this specific user's entries
             query = query.eq('entered_by', currentUserId);
         } 
         else if (role === 'Organiser_user') {
+            // Find all Data Entry users created by this Organiser
             const { data: teamUsers } = await supabaseClient.from('users').select('id').eq('created_by', currentUserId);
+            
+            // Build an array of the Organiser's ID + their team's IDs
             const teamIds = (teamUsers || []).map(u => u.id);
             teamIds.push(currentUserId); 
+            
+            // Filter the donors to only show those logged by this specific team
             query = query.in('entered_by', teamIds);
         }
+        // If Master_admin, no filters are applied so they see everything
         
         const { data, error } = await query;
         if (error) throw error;
 
         msgDiv.style.display = 'none'; 
         allDonorsCache = data || [];
-        
-        // NEW: Populate the Camp dropdown dynamically based on actual donor data
-        populateCampFilter(allDonorsCache);
-        
         applyFilters();
     } catch (error) {
         msgDiv.textContent = 'Connection error while fetching data.';
@@ -50,90 +54,32 @@ async function fetchDonors() {
     }
 }
 
-// ==========================================
-// MODAL & FILTER LOGIC
-// ==========================================
-function populateCampFilter(donors) {
-    const filterCamp = document.getElementById('filterCamp');
-    filterCamp.innerHTML = '<option value="All">All Camps</option>';
-    
-    const camps = new Set();
-    donors.forEach(d => {
-        const campName = d.camp_name && d.camp_name.trim() !== '' ? d.camp_name : 'General';
-        camps.add(campName);
-    });
-    
-    Array.from(camps).sort().forEach(camp => {
-        filterCamp.innerHTML += `<option value="${camp}">${camp}</option>`;
-    });
-}
-
-function openFilterModal() {
-    document.getElementById('filterModal').style.display = 'flex';
-}
-
-function closeFilterModal() {
-    document.getElementById('filterModal').style.display = 'none';
-}
-
-function clearFilters() {
-    document.getElementById('filterBloodGroup').value = 'All';
-    document.getElementById('filterStatus').value = 'All';
-    document.getElementById('filterCamp').value = 'All';
-    applyFiltersAndClose();
-}
-
-function applyFiltersAndClose() {
-    applyFilters();
-    closeFilterModal();
-}
-
 function applyFilters() {
     const bgFilter = document.getElementById('filterBloodGroup').value;
     const statusFilter = document.getElementById('filterStatus').value;
-    const campFilter = document.getElementById('filterCamp').value; // NEW
     
     let filteredData = allDonorsCache;
     
     if (bgFilter !== 'All') filteredData = filteredData.filter(d => d.blood_group === bgFilter);
     if (statusFilter !== 'All') filteredData = filteredData.filter(d => d.status === statusFilter);
-    if (campFilter !== 'All') {
-        filteredData = filteredData.filter(d => {
-            const cName = d.camp_name && d.camp_name.trim() !== '' ? d.camp_name : 'General';
-            return cName === campFilter;
-        });
-    }
-    
-    // Update active filter text indicator
-    const activeText = document.getElementById('activeFilterText');
-    if (bgFilter === 'All' && statusFilter === 'All' && campFilter === 'All') {
-        activeText.textContent = 'Showing All Donors';
-        activeText.style.color = '#666';
-    } else {
-        activeText.textContent = 'Active Filters Applied';
-        activeText.style.color = '#d32f2f';
-    }
     
     currentRenderedDonors = filteredData;
     renderTable(filteredData);
 }
 
-// ==========================================
-// RENDER UI
-// ==========================================
 function renderTable(donorsArray) {
     const tableBody = document.getElementById('donorTableBody');
     tableBody.innerHTML = '';
     
     if (donorsArray.length === 0) {
-        // Updated colspan to 7 to match new columns
-        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No donors found matching criteria.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No donor entries within your organiser.</td></tr>';
         return;
     }
 
     donorsArray.forEach(donor => {
         let actionsHtml = `<a href="donor.html?id=${donor.id}" class="btn-view">View</a>`;
         
+        // Since the array is already filtered perfectly, we just assign edit rights logically
         let canEdit = false;
         if (role === 'Master_admin' || role === 'Organiser_user') canEdit = true;
         else if (role === 'Data_entry_user' && donor.entered_by === currentUserId) canEdit = true;
@@ -148,14 +94,12 @@ function renderTable(donorsArray) {
 
         const statusDisplay = donor.status === 'Active' ? '🟢 Active' : '🩸 Rest';
         const statusColor = donor.status === 'Active' ? '#78B159' : '#DD2E44';
-        const campDisplay = donor.camp_name && donor.camp_name.trim() !== '' ? donor.camp_name : 'General';
 
         tableBody.innerHTML += `<tr>
             <td><strong>${donor.name}</strong></td>
             <td><span class="blood-badge">${donor.blood_group}</span></td>
             <td>${donor.contact}</td>
             <td>${donor.location}</td>
-            <td>${campDisplay}</td>
             <td style="color: ${statusColor}; font-weight: bold;">${statusDisplay}</td>
             <td>${actionsHtml}</td>
         </tr>`;
