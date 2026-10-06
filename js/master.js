@@ -96,7 +96,6 @@ async function fetchMasterStats() {
         globalHierarchy = {};
         safeUsers.forEach(u => {
             if (u.role === 'Organiser_user') {
-                // UPDATED: Uses Full Name for display in Overview
                 const displayName = u.name || u.username;
                 globalHierarchy[u.id] = { orgName: displayName, totalDonors: 0, deCount: 0, breakdownMap: {} };
                 globalHierarchy[u.id].breakdownMap[u.id] = { name: '[Organiser Direct Entry]', count: 0 };
@@ -373,7 +372,7 @@ async function fetchOrganisersList() {
         if (error) throw error;
 
         tbody.innerHTML = '';
-        if (!organisers || organisers.length === 0) return tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No organisers found.</td></tr>';
+        if (!organisers || organisers.length === 0) return tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No organisers found.</td></tr>';
         
         organisers.forEach(org => {
             const safeId = org.id.replace(/'/g, "\\'");
@@ -381,25 +380,56 @@ async function fetchOrganisersList() {
             const safeUser = org.username.replace(/'/g, "\\'");
             const safePass = org.password.replace(/'/g, "\\'");
             const safeCamp = (org.default_camp || 'General').replace(/'/g, "\\'");
+            
+            // Calculate Active Status (Defaults to true if null in DB)
+            const isActive = org.is_active !== false; 
+            const statusBadge = isActive ? '<span style="color: #28a745; font-weight:bold;">🟢 Active</span>' : '<span style="color: #dc3545; font-weight:bold;">🔴 Deactivated</span>';
+            const toggleText = isActive ? 'Deactivate' : 'Activate';
+            const toggleColor = isActive ? '#ff9800' : '#28a745'; // Orange for deactivate, Green for activate
+
             tbody.innerHTML += `<tr>
                 <td><strong>${org.name || '-'}</strong></td>
                 <td>${org.username}</td>
                 <td>${org.password}</td>
                 <td style="color:#0056b3; font-weight:bold;">${org.default_camp || 'General'}</td>
+                <td>${statusBadge}</td>
                 <td>
+                    <button class="btn-sm" style="background-color: ${toggleColor}; color: white; margin-right: 5px; margin-bottom: 5px;" onclick="toggleTeamStatus('${safeId}', ${isActive}, '${safeUser}')">${toggleText}</button>
                     <button class="btn-sm btn-edit" onclick="triggerEdit('${safeId}', '${safeName}', '${safeUser}', '${safePass}', '${safeCamp}')">Edit</button>
                     <button class="btn-sm btn-delete" onclick="deleteOrganiser('${safeId}', '${safeUser}')">Delete</button>
                 </td>
             </tr>`;
         });
-    } catch (error) { tbody.innerHTML = '<tr><td colspan="5" style="color:red">Error loading organisers.</td></tr>'; }
+    } catch (error) { tbody.innerHTML = '<tr><td colspan="6" style="color:red">Error loading organisers.</td></tr>'; }
+}
+
+// --- NEW: Toggle Organiser & Team Status ---
+async function toggleTeamStatus(orgId, currentStatus, username) {
+    const newStatus = !currentStatus;
+    const actionWord = newStatus ? "ACTIVATE" : "DEACTIVATE";
+    
+    if (!confirm(`Are you sure you want to ${actionWord} Organiser '${username}' and all Data Entry users under their team?`)) return;
+
+    try {
+        // 1. Update the Organiser
+        const { error: err1 } = await supabaseClient.from('users').update({ is_active: newStatus }).eq('id', orgId);
+        if (err1) throw err1;
+
+        // 2. Update their Data Entry Team
+        const { error: err2 } = await supabaseClient.from('users').update({ is_active: newStatus }).eq('created_by', orgId);
+        if (err2) throw err2;
+
+        await logActivity(`Set account status to ${newStatus ? 'Active' : 'Deactivated'} for Organiser and team: ${username}`);
+        fetchOrganisersList(); // Refresh the table instantly
+    } catch (error) {
+        alert('Failed to change status: ' + error.message);
+    }
 }
 
 document.getElementById('orgForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const orgId = document.getElementById('orgId').value;
     
-    // UPDATED: Now includes name in the payload
     const payload = {
         name: document.getElementById('orgName').value.trim(),
         username: document.getElementById('orgUsername').value.trim(),
@@ -414,6 +444,8 @@ document.getElementById('orgForm').addEventListener('submit', async (e) => {
             await logActivity(`Updated Organiser credentials for: ${payload.name || payload.username}`);
         } else {
             payload.role = 'Organiser_user';
+            // Explicitly set new users to active
+            payload.is_active = true; 
             const { error } = await supabaseClient.from('users').insert(payload);
             if (error) throw error;
             await logActivity(`Created new Organiser: ${payload.name || payload.username}`);
@@ -421,11 +453,10 @@ document.getElementById('orgForm').addEventListener('submit', async (e) => {
         resetOrgForm();
         fetchOrganisersList(); 
         fetchMasterConfig(); 
-        fetchMasterStats(); // Refresh overview to show new name instantly
+        fetchMasterStats(); 
     } catch (error) { alert('Error updating database. Username may already exist.'); }
 });
 
-// UPDATED: Receives and sets the name parameter
 function triggerEdit(id, name, username, password, camp) {
     document.getElementById('orgId').value = id;
     document.getElementById('orgName').value = name;
