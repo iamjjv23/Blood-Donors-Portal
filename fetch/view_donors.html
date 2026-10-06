@@ -18,36 +18,17 @@
                 <button style="float: right;" class="btn-logout" onclick="logout()">Logout</button>
                 <br><br><br><br>
                 <button class="btn-nav" onclick="goBack()">Back to Dashboard</button>
-                <!-- FIXED: Added .html -->
                 <button class="btn-nav" onclick="window.location.href='data_entry.html'">Data Entry Form</button>
             </div>
         </div>
 
-        <div class="filter-box" style="background:#f8f9fa; padding:15px; border-radius:6px; border:1px solid #ddd; margin-bottom:15px; display:flex; gap:10px; align-items:flex-end; flex-wrap: wrap;">
-            <div style="flex:1; min-width: 150px;">
-                <label style="font-weight:bold; display:block; margin-bottom:5px; color:#333;">Blood Group:</label>
-                <select id="filterBloodGroup" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
-                    <option value="All">All Blood Groups</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                </select>
+        <!-- NEW: Cleaner Filter Bar -->
+        <div class="filter-box" style="background:#f8f9fa; padding:15px; border-radius:6px; border:1px solid #ddd; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap;">
+            <div id="activeFilterText" style="color: #0056b3; font-weight: bold; font-size: 0.9em; margin-bottom: 10px;">Showing All Donors</div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-submit" style="width:auto; background-color:#17a2b8; padding: 10px 15px;" onclick="openFilterModal()">⚙️ Filters</button>
+                <button class="btn-submit" style="width:auto; background-color:#28a745; padding: 10px 15px;" onclick="exportToTxt()">Export List</button>
             </div>
-            <div style="flex:1; min-width: 150px;">
-                <label style="font-weight:bold; display:block; margin-bottom:5px; color:#333;">Status:</label>
-                <select id="filterStatus" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
-                    <option value="All">All Statuses</option>
-                    <option value="Active">Active</option>
-                    <option value="Rest">Rest</option>
-                </select>
-            </div>
-            <button class="btn-submit" style="width:auto; background-color:#0056b3; padding: 10px 15px;" onclick="applyFilters()">Filter</button>
-            <button class="btn-submit" style="width:auto; background-color:#28a745; padding: 10px 15px;" onclick="exportToTxt()">Export List</button>
         </div>
 
         <div class="table-responsive">
@@ -60,6 +41,7 @@
                         <th>Blood Group</th>
                         <th>Contact</th>
                         <th>Location</th>
+                        <th>Camp Name</th> <!-- NEW: Camp Column -->
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
@@ -68,6 +50,47 @@
             </table>
         </div>
     </div>
+
+    <!-- ========================================== -->
+    <!-- FILTER MODAL POPUP                         -->
+    <!-- ========================================== -->
+    <div id="filterModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+        <div style="background-color:#fff; padding:25px; border-radius:8px; width:90%; max-width:400px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:#333; border-bottom: 1px solid #ddd; padding-bottom: 10px;">Filter Donors</h3>
+            
+            <label style="font-weight:bold; display:block; margin-bottom:5px; margin-top:15px; color:#333;">Blood Group:</label>
+            <select id="filterBloodGroup" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                <option value="All">All Blood Groups</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+            </select>
+            
+            <label style="font-weight:bold; display:block; margin-bottom:5px; margin-top:15px; color:#333;">Status:</label>
+            <select id="filterStatus" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                <option value="All">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="Rest">Rest</option>
+            </select>
+
+            <label style="font-weight:bold; display:block; margin-bottom:5px; margin-top:15px; color:#333;">Registered Camp:</label>
+            <select id="filterCamp" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                <option value="All">All Camps</option>
+                <!-- Dynamically Populated via JS -->
+            </select>
+
+            <div style="display:flex; justify-content:space-between; margin-top:25px; gap: 10px;">
+                <button class="btn-logout" style="flex:1; padding: 10px;" onclick="clearFilters()">Clear</button>
+                <button class="btn-submit" style="flex:1; padding: 10px; margin: 0;" onclick="applyFiltersAndClose()">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+
     <script src="../js/view_donors.js"></script>
 </body>
 </html>
