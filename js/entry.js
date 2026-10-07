@@ -154,7 +154,7 @@ document.getElementById('donorForm').addEventListener('submit', async (e) => {
             if (error) throw error;
             
             // Log the edit action
-            await supabaseClient.from('activity_logs').insert({ user_id: currentUserId, action_details: `Updated details for Donor: ${payload.name}` });
+            await supabaseClient.from('activity_logs').insert({ user_id: currentUserId, action_details: `Updated details for Donor: ${payload.name} (via Web)` });
             
             msgDiv.innerHTML = `Success! Donor updated.`;
         } else {
@@ -163,7 +163,7 @@ document.getElementById('donorForm').addEventListener('submit', async (e) => {
             if (error) throw error;
             
             // Log the creation action
-            await supabaseClient.from('activity_logs').insert({ user_id: currentUserId, action_details: `Registered new Donor: ${payload.name}` });
+            await supabaseClient.from('activity_logs').insert({ user_id: currentUserId, action_details: `Registered new Donor: ${payload.name} (via Web)` });
             
             msgDiv.innerHTML = `Success! Donor registered.`;
         }
