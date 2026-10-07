@@ -23,7 +23,8 @@ async function logActivity(actionDetails) {
     try {
         await supabaseClient.from('activity_logs').insert({
             user_id: currentUserId,
-            action_details: actionDetails
+            // NEW: Appends (via Web) to the end of every log!
+            action_details: actionDetails + ' (via Web)' 
         });
     } catch (e) {
         console.error("Failed to log activity:", e);
