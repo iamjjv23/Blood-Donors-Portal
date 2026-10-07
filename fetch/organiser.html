@@ -6,7 +6,7 @@
     <title>Organiser Dashboard | Blood Donation Portal</title>
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="icon" type="image/x-icon" href="../img/favicon.png">
-	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bodybg">
 
@@ -21,7 +21,8 @@
         <div style="margin-bottom: 20px;">
             <h2>Organiser Dashboard</h2> <br>
             <button class="btn-nav tab-btn active-tab" onclick="showSection('donorSection', this)">Dashboard Overview</button>
-            <button class="btn-nav tab-btn" onclick="showSection('userSection', this)">Add New User</button>
+            <!-- UPDATED: Tab Name -->
+            <button class="btn-nav tab-btn" onclick="showSection('userSection', this)">Manage Team</button>
             <button class="btn-nav" onclick="window.location.href='data_entry.html'">Data Entry Form</button>
         </div>
 
@@ -39,30 +40,65 @@
             </div>
         </div>
 
+        <!-- ============================== -->
+        <!-- MANAGE USERS SECTION           -->
+        <!-- ============================== -->
         <div id="userSection" class="section">
-            <h3>Create New User</h3>
-            <form id="addUserForm">
-                <div class="form-group">
-                    <label>Username:</label>
-                    <input type="text" id="newUsername" required>
-                </div>
-                <div class="form-group">
-                    <label>Password:</label>
-                    <input type="password" id="newPassword" required>
-                </div>
-                <div class="form-group">
-                    <label>Role:</label>
-                    <select id="newRole" required>
-                        <option value="Data_entry_user">Data Entry User</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-submit">Create User</button>
-            </form>
+            <div class="stats-box" style="background-color: #f8f9fa;">
+                <h3 id="formTitle" style="margin-top: 0;">Create New User</h3>
+                <form id="addUserForm">
+                    <input type="hidden" id="editUserId"> <!-- NEW: Hidden ID for Edit Mode -->
+                    
+                    <!-- NEW: Full Name Field -->
+                    <div class="form-group">
+                        <label>Full Name (Display Name):</label>
+                        <input type="text" id="newName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Username (Login):</label>
+                        <input type="text" id="newUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password:</label>
+                        <input type="text" id="newPassword" required>
+                        <small id="passwordHint" style="display:none; color: gray;">Leave blank to keep existing password.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Role:</label>
+                        <select id="newRole" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+                            <option value="Data_entry_user">Data Entry User</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-submit" id="submitUserBtn">Create User</button>
+                    <!-- NEW: Cancel Edit Button -->
+                    <button type="button" class="btn-logout" id="cancelEditBtn" style="display:none; width: 100%; margin-top: 10px;" onclick="resetUserForm()">Cancel Edit</button>
+                </form>
+            </div>
+
+            <!-- NEW: Users Table -->
+            <h3>My Team Members</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Username</th>
+                            <th>Password</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr><td colspan="5" style="text-align:center;">Loading team...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
-		(function() {
+        (function() {
         const currentUrl = window.location.href;
         if (currentUrl.includes('.html')) 
         {
@@ -70,7 +106,7 @@
             window.history.replaceState(null, null, cleanUrl);
         }
     })();
-	</script>
+    </script>
     
     <script src="../js/organiser.js"></script>
 </body>
