@@ -18,6 +18,17 @@ window.onload = () => {
     fetchDonors();
 };
 
+async function logActivity(actionDetails) {
+    try {
+        await supabaseClient.from('activity_logs').insert({
+            user_id: currentUserId,
+            action_details: actionDetails + ' (via Web)'
+        });
+    } catch (e) {
+        console.error("Failed to log activity:", e);
+    }
+}
+
 async function fetchDonors() {
     const tableBody = document.getElementById('donorTableBody');
     const msgDiv = document.getElementById('message');
@@ -125,8 +136,16 @@ async function deleteDonorRecord(donorId) {
     document.getElementById('message').textContent = 'Deleting donor...';
     
     try {
+        // Find the donor's name before deleting them from the array cache
+        const donorToDelete = allDonorsCache.find(d => d.id === donorId);
+        const donorName = donorToDelete ? donorToDelete.name : 'Unknown Donor';
+
         const { error } = await supabaseClient.from('donors').delete().eq('id', donorId);
         if (error) throw error;
+        
+        // Log the activity!
+        await logActivity(`Deleted donor record: ${donorName}`);
+
         fetchDonors(); 
     } catch (e) {
         alert('Connection failed while deleting.');
