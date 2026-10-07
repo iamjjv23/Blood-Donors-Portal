@@ -15,6 +15,20 @@ window.onload = () => {
     }
 };
 
+// ==========================================
+// NEW: Activity Logging Helper
+// ==========================================
+async function logActivity(actionDetails) {
+    try {
+        await supabaseClient.from('activity_logs').insert({
+            user_id: currentUserId,
+            action_details: actionDetails + ' (via Web)' // Appends the Web tag!
+        });
+    } catch (e) {
+        console.error("Failed to log activity:", e);
+    }
+}
+
 function showSection(sectionId, clickedBtn) {
     document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
     document.getElementById(sectionId).classList.add('active');
@@ -50,14 +64,22 @@ document.getElementById('addUserForm').addEventListener('submit', async (e) => {
     msgDiv.style.color = '#0056b3';
 
     try {
+        // Retrieve values securely
+        const newUsername = document.getElementById('newUsername').value.trim();
+        const newPassword = document.getElementById('newPassword').value;
+        const newRole = document.getElementById('newRole').value;
+
         const { error } = await supabaseClient.from('users').insert({
-            username: document.getElementById('newUsername').value.trim(),
-            password: document.getElementById('newPassword').value,
-            role: document.getElementById('newRole').value,
+            username: newUsername,
+            password: newPassword,
+            role: newRole,
             created_by: currentUserId
         });
 
         if (error) throw error;
+
+        // NEW: Log the activity explicitly showing the new username created
+        await logActivity(`Created new Data Entry user: ${newUsername}`);
 
         msgDiv.textContent = 'User successfully created!';
         msgDiv.style.color = 'green';
