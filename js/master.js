@@ -350,10 +350,14 @@ async function deleteCamp(campName) {
     } catch(e) { alert('Error deleting camp (ensure no donors depend on it).'); }
 }
 
+// ==========================================
+// UPDATED: assignDefaultCamp with Alert
+// ==========================================
 async function assignDefaultCamp() {
     const orgId = document.getElementById('assignOrgSelect').value;
     const campName = document.getElementById('assignCampSelect').value;
     if(!orgId || !campName) return;
+    
     try {
         const { error } = await supabaseClient.from('users').update({default_camp: campName}).eq('id', orgId);
         if (error) throw error;
@@ -361,8 +365,13 @@ async function assignDefaultCamp() {
         const orgName = masterOrganisers.find(o => o.id === orgId)?.name || masterOrganisers.find(o => o.id === orgId)?.username || 'Unknown';
         await logActivity(`Assigned default camp '${campName}' to Organiser '${orgName}'`);
         
+        // NEW: Show success alert so the user knows it worked!
+        alert(`Successfully assigned the default camp '${campName}' to Organiser '${orgName}'.`);
+        
         fetchOrganisersList(); 
-    } catch(e) { alert('Connection failed.'); }
+    } catch(e) { 
+        alert('Failed to assign the camp. Please check your connection and try again.'); 
+    }
 }
 
 async function fetchOrganisersList() {
@@ -403,7 +412,6 @@ async function fetchOrganisersList() {
     } catch (error) { tbody.innerHTML = '<tr><td colspan="6" style="color:red">Error loading organisers.</td></tr>'; }
 }
 
-// --- NEW: Toggle Organiser & Team Status ---
 async function toggleTeamStatus(orgId, currentStatus, username) {
     const newStatus = !currentStatus;
     const actionWord = newStatus ? "ACTIVATE" : "DEACTIVATE";
