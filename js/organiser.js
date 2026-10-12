@@ -11,6 +11,13 @@ window.onload = () => {
         alert('Unauthorized access. Redirecting to login.');
         window.location.href = '../index.html'; 
     } else {
+        // ==========================================
+        // NEW: Active Session Logger (Web)
+        // ==========================================
+        if (!sessionStorage.getItem('session_logged')) {
+            logActivity("Resumed active session");
+            sessionStorage.setItem('session_logged', 'true');
+        }
         fetchDonorCount();
     }
 };
@@ -33,7 +40,6 @@ function showSection(sectionId, clickedBtn) {
     clickedBtn.classList.add('active-tab');
     document.getElementById('message').textContent = '';
     
-    // NEW: Fetch users when the Manage Team tab is clicked
     if (sectionId === 'userSection') {
         fetchMyTeam();
     }
@@ -57,9 +63,6 @@ async function fetchDonorCount() {
     }
 }
 
-// ==========================================
-// NEW: MANAGE TEAM LOGIC
-// ==========================================
 async function fetchMyTeam() {
     const tbody = document.getElementById('usersTableBody');
     try {
@@ -105,13 +108,12 @@ document.getElementById('addUserForm').addEventListener('submit', async (e) => {
     const userId = document.getElementById('editUserId').value;
     const name = document.getElementById('newName').value.trim();
     const username = document.getElementById('newUsername').value.trim();
-    const password = document.getElementById('newPassword').value; // Don't trim password
+    const password = document.getElementById('newPassword').value; 
 
     try {
         if (userId) {
-            // ================== EDIT MODE ==================
             const payload = { name: name, username: username };
-            if (password !== "") { payload.password = password; } // Only update pass if they typed one
+            if (password !== "") { payload.password = password; } 
             
             const { error } = await supabaseClient.from('users').update(payload).eq('id', userId);
             if (error) throw error;
@@ -120,7 +122,6 @@ document.getElementById('addUserForm').addEventListener('submit', async (e) => {
             msgDiv.textContent = 'User successfully updated!';
             msgDiv.style.color = 'green';
         } else {
-            // ================== ADD MODE ==================
             if (password === "") throw new Error("Password is required for new users.");
             
             const payload = {
@@ -141,7 +142,7 @@ document.getElementById('addUserForm').addEventListener('submit', async (e) => {
         }
 
         resetUserForm();
-        fetchMyTeam(); // Refresh the table
+        fetchMyTeam(); 
     } catch (error) {
         msgDiv.textContent = error.message || 'Username already exists or connection failed.';
         msgDiv.style.color = 'red';
@@ -153,7 +154,6 @@ function triggerEditUser(id, name, username, password) {
     document.getElementById('newName').value = name;
     document.getElementById('newUsername').value = username;
     
-    // Clear the password field and make it optional so they don't accidentally overwrite it
     document.getElementById('newPassword').value = '';
     document.getElementById('newPassword').removeAttribute('required');
     document.getElementById('passwordHint').style.display = 'block';
@@ -190,7 +190,13 @@ async function deleteUser(id, username) {
     }
 }
 
-function logout() {
+// ==========================================
+// NEW: Async Logout 
+// ==========================================
+async function logout() {
+    document.getElementById('message').textContent = 'Logging out...';
+    try { await logActivity("Logged out"); } catch (e) {}
     localStorage.clear();
+    sessionStorage.clear();
     window.location.href = '../index.html';
 }
