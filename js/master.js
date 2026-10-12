@@ -14,6 +14,14 @@ window.onload = () => {
     if (!token || role !== 'Master_admin') {
         window.location.href = '../index.html'; 
     } else {
+        // ==========================================
+        // NEW: Active Session Logger (Web)
+        // ==========================================
+        if (!sessionStorage.getItem('session_logged')) {
+            logActivity("Resumed active session");
+            sessionStorage.setItem('session_logged', 'true');
+        }
+
         fetchMasterStats();
         fetchMasterConfig(); 
     }
@@ -23,7 +31,7 @@ async function logActivity(actionDetails) {
     try {
         await supabaseClient.from('activity_logs').insert({
             user_id: currentUserId,
-            // NEW: Appends (via Web) to the end of every log!
+            // Appends (via Web) to the end of every log!
             action_details: actionDetails + ' (via Web)' 
         });
     } catch (e) {
@@ -351,9 +359,6 @@ async function deleteCamp(campName) {
     } catch(e) { alert('Error deleting camp (ensure no donors depend on it).'); }
 }
 
-// ==========================================
-// UPDATED: assignDefaultCamp with Alert
-// ==========================================
 async function assignDefaultCamp() {
     const orgId = document.getElementById('assignOrgSelect').value;
     const campName = document.getElementById('assignCampSelect').value;
@@ -366,7 +371,6 @@ async function assignDefaultCamp() {
         const orgName = masterOrganisers.find(o => o.id === orgId)?.name || masterOrganisers.find(o => o.id === orgId)?.username || 'Unknown';
         await logActivity(`Assigned default camp '${campName}' to Organiser '${orgName}'`);
         
-        // NEW: Show success alert so the user knows it worked!
         alert(`Successfully assigned the default camp '${campName}' to Organiser '${orgName}'.`);
         
         fetchOrganisersList(); 
@@ -391,11 +395,10 @@ async function fetchOrganisersList() {
             const safePass = org.password.replace(/'/g, "\\'");
             const safeCamp = (org.default_camp || 'General').replace(/'/g, "\\'");
             
-            // Calculate Active Status (Defaults to true if null in DB)
             const isActive = org.is_active !== false; 
             const statusBadge = isActive ? '<span style="color: #28a745; font-weight:bold;">🟢 Active</span>' : '<span style="color: #dc3545; font-weight:bold;">🔴 Deactivated</span>';
             const toggleText = isActive ? 'Deactivate' : 'Activate';
-            const toggleColor = isActive ? '#ff9800' : '#28a745'; // Orange for deactivate, Green for activate
+            const toggleColor = isActive ? '#ff9800' : '#28a745'; 
 
             tbody.innerHTML += `<tr>
                 <td><strong>${org.name || '-'}</strong></td>
@@ -420,16 +423,14 @@ async function toggleTeamStatus(orgId, currentStatus, username) {
     if (!confirm(`Are you sure you want to ${actionWord} Organiser '${username}' and all Data Entry users under their team?`)) return;
 
     try {
-        // 1. Update the Organiser
         const { error: err1 } = await supabaseClient.from('users').update({ is_active: newStatus }).eq('id', orgId);
         if (err1) throw err1;
 
-        // 2. Update their Data Entry Team
         const { error: err2 } = await supabaseClient.from('users').update({ is_active: newStatus }).eq('created_by', orgId);
         if (err2) throw err2;
 
         await logActivity(`Set account status to ${newStatus ? 'Active' : 'Deactivated'} for Organiser and team: ${username}`);
-        fetchOrganisersList(); // Refresh the table instantly
+        fetchOrganisersList(); 
     } catch (error) {
         alert('Failed to change status: ' + error.message);
     }
@@ -453,7 +454,6 @@ document.getElementById('orgForm').addEventListener('submit', async (e) => {
             await logActivity(`Updated Organiser credentials for: ${payload.name || payload.username}`);
         } else {
             payload.role = 'Organiser_user';
-            // Explicitly set new users to active
             payload.is_active = true; 
             const { error } = await supabaseClient.from('users').insert(payload);
             if (error) throw error;
@@ -500,7 +500,9 @@ async function deleteOrganiser(id, username) {
     } catch (error) { alert('Error: Cannot delete an Organiser that has active donors linked to their team.'); }
 }
 
-function logout() {
+async function logout() {
+    try { await logActivity("Logged out"); } catch (e) {}
     localStorage.clear();
+    sessionStorage.clear();
     window.location.href = '../index.html'; 
 }
