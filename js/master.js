@@ -14,9 +14,6 @@ window.onload = () => {
     if (!token || role !== 'Master_admin') {
         window.location.href = '../index.html'; 
     } else {
-        // ==========================================
-        // NEW: Active Session Logger (Web)
-        // ==========================================
         if (!sessionStorage.getItem('session_logged')) {
             logActivity("Resumed active session");
             sessionStorage.setItem('session_logged', 'true');
@@ -31,7 +28,6 @@ async function logActivity(actionDetails) {
     try {
         await supabaseClient.from('activity_logs').insert({
             user_id: currentUserId,
-            // Appends (via Web) to the end of every log!
             action_details: actionDetails + ' (via Web)' 
         });
     } catch (e) {
@@ -395,6 +391,9 @@ async function fetchOrganisersList() {
             const safePass = org.password.replace(/'/g, "\\'");
             const safeCamp = (org.default_camp || 'General').replace(/'/g, "\\'");
             
+            // NEW: Prioritize Name over Username for the Display Name in the UI & Logs
+            const displayName = (org.name || org.username).replace(/'/g, "\\'");
+
             const isActive = org.is_active !== false; 
             const statusBadge = isActive ? '<span style="color: #28a745; font-weight:bold;">🟢 Active</span>' : '<span style="color: #dc3545; font-weight:bold;">🔴 Deactivated</span>';
             const toggleText = isActive ? 'Deactivate' : 'Activate';
@@ -407,20 +406,21 @@ async function fetchOrganisersList() {
                 <td style="color:#0056b3; font-weight:bold;">${org.default_camp || 'General'}</td>
                 <td>${statusBadge}</td>
                 <td>
-                    <button class="btn-sm" style="background-color: ${toggleColor}; color: white; margin-right: 5px; margin-bottom: 5px;" onclick="toggleTeamStatus('${safeId}', ${isActive}, '${safeUser}')">${toggleText}</button>
+                    <button class="btn-sm" style="background-color: ${toggleColor}; color: white; margin-right: 5px; margin-bottom: 5px;" onclick="toggleTeamStatus('${safeId}', ${isActive}, '${displayName}')">${toggleText}</button>
                     <button class="btn-sm btn-edit" onclick="triggerEdit('${safeId}', '${safeName}', '${safeUser}', '${safePass}', '${safeCamp}')">Edit</button>
-                    <button class="btn-sm btn-delete" onclick="deleteOrganiser('${safeId}', '${safeUser}')">Delete</button>
+                    <button class="btn-sm btn-delete" onclick="deleteOrganiser('${safeId}', '${displayName}')">Delete</button>
                 </td>
             </tr>`;
         });
     } catch (error) { tbody.innerHTML = '<tr><td colspan="6" style="color:red">Error loading organisers.</td></tr>'; }
 }
 
-async function toggleTeamStatus(orgId, currentStatus, username) {
+// UPDATED: Now accepts and logs the Organiser's Display Name (Full Name)
+async function toggleTeamStatus(orgId, currentStatus, displayName) {
     const newStatus = !currentStatus;
     const actionWord = newStatus ? "ACTIVATE" : "DEACTIVATE";
     
-    if (!confirm(`Are you sure you want to ${actionWord} Organiser '${username}' and all Data Entry users under their team?`)) return;
+    if (!confirm(`Are you sure you want to ${actionWord} Organiser '${displayName}' and all Data Entry users under their team?`)) return;
 
     try {
         const { error: err1 } = await supabaseClient.from('users').update({ is_active: newStatus }).eq('id', orgId);
@@ -429,7 +429,7 @@ async function toggleTeamStatus(orgId, currentStatus, username) {
         const { error: err2 } = await supabaseClient.from('users').update({ is_active: newStatus }).eq('created_by', orgId);
         if (err2) throw err2;
 
-        await logActivity(`Set account status to ${newStatus ? 'Active' : 'Deactivated'} for Organiser and team: ${username}`);
+        await logActivity(`Set account status to ${newStatus ? 'Active' : 'Deactivated'} for Organiser and team: ${displayName}`);
         fetchOrganisersList(); 
     } catch (error) {
         alert('Failed to change status: ' + error.message);
@@ -487,13 +487,14 @@ function resetOrgForm() {
     document.getElementById('orgCancelBtn').style.display = 'none';
 }
 
-async function deleteOrganiser(id, username) {
-    if (!confirm(`Are you sure you want to delete Organiser '${username}'?`)) return;
+// UPDATED: Now accepts and logs the Organiser's Display Name (Full Name)
+async function deleteOrganiser(id, displayName) {
+    if (!confirm(`Are you sure you want to delete Organiser '${displayName}'?`)) return;
     try {
         const { error } = await supabaseClient.from('users').delete().eq('id', id);
         if (error) throw error;
         
-        await logActivity(`Deleted Organiser: ${username}`);
+        await logActivity(`Deleted Organiser: ${displayName}`);
         
         fetchOrganisersList();
         fetchMasterStats();
