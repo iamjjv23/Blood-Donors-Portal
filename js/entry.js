@@ -6,11 +6,34 @@ const token = localStorage.getItem('token');
 const role = localStorage.getItem('role');
 const currentUserId = localStorage.getItem('userId');
 
+// ==========================================
+// NEW: Activity Logger added to Data Entry
+// ==========================================
+async function logActivity(actionDetails) {
+    try {
+        await supabaseClient.from('activity_logs').insert({
+            user_id: currentUserId,
+            // Appends (via Web) automatically!
+            action_details: actionDetails + ' (via Web)' 
+        });
+    } catch (e) {
+        console.error("Failed to log activity:", e);
+    }
+}
+
 window.onload = () => {
     if (!token) {
         alert('Unauthorized access. Redirecting to login.');
         window.location.href = '../index.html'; 
         return;
+    }
+
+    // ==========================================
+    // NEW: Active Session Logger (Web)
+    // ==========================================
+    if (!sessionStorage.getItem('session_logged')) {
+        logActivity("Resumed active session");
+        sessionStorage.setItem('session_logged', 'true');
     }
 
     if (role === 'Organiser_user' || role === 'Master_admin') {
@@ -153,8 +176,8 @@ document.getElementById('donorForm').addEventListener('submit', async (e) => {
             const { error } = await supabaseClient.from('donors').update(payload).eq('id', editId);
             if (error) throw error;
             
-            // Log the edit action
-            await supabaseClient.from('activity_logs').insert({ user_id: currentUserId, action_details: `Updated details for Donor: ${payload.name} (via Web)` });
+            // Log the edit action using the new helper
+            await logActivity(`Updated details for Donor: ${payload.name}`);
             
             msgDiv.innerHTML = `Success! Donor updated.`;
         } else {
@@ -162,8 +185,8 @@ document.getElementById('donorForm').addEventListener('submit', async (e) => {
             const { error } = await supabaseClient.from('donors').insert(payload);
             if (error) throw error;
             
-            // Log the creation action
-            await supabaseClient.from('activity_logs').insert({ user_id: currentUserId, action_details: `Registered new Donor: ${payload.name} (via Web)` });
+            // Log the creation action using the new helper
+            await logActivity(`Registered new Donor: ${payload.name}`);
             
             msgDiv.innerHTML = `Success! Donor registered.`;
         }
@@ -178,7 +201,10 @@ document.getElementById('donorForm').addEventListener('submit', async (e) => {
     }
 });
 
-function logout() {
+async function logout() {
+    document.getElementById('message').textContent = 'Logging out...';
+    try { await logActivity("Logged out"); } catch (e) {}
     localStorage.clear();
+    sessionStorage.clear();
     window.location.href = '../index.html'; 
 }
