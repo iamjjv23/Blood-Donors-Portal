@@ -11,9 +11,6 @@ window.onload = () => {
         alert('Unauthorized access. Redirecting to login.');
         window.location.href = '../index.html'; 
     } else {
-        // ==========================================
-        // NEW: Active Session Logger (Web)
-        // ==========================================
         if (!sessionStorage.getItem('session_logged')) {
             logActivity("Resumed active session");
             sessionStorage.setItem('session_logged', 'true');
@@ -177,9 +174,34 @@ function resetUserForm() {
     document.getElementById('cancelEditBtn').style.display = 'none';
 }
 
+// ==========================================
+// UPDATED: Require Password to Delete User
+// ==========================================
 async function deleteUser(id, username) {
-    if (!confirm(`Are you sure you want to delete User '${username}'?`)) return;
+    const passwordAttempt = prompt(`WARNING: Deleting User '${username}' cannot be undone.\n\nEnter YOUR password to confirm:`);
+    
+    if (passwordAttempt === null) return; // User clicked Cancel
+    if (passwordAttempt.trim() === "") {
+        alert("Password cannot be empty.");
+        return;
+    }
+
     try {
+        // 1. Verify Organiser's Password
+        const { data: orgUser, error: authErr } = await supabaseClient
+            .from('users')
+            .select('password')
+            .eq('id', currentUserId)
+            .single();
+
+        if (authErr) throw authErr;
+        
+        if (orgUser.password !== passwordAttempt) {
+            alert("Incorrect password! Deletion canceled.");
+            return;
+        }
+
+        // 2. Delete the User
         const { error } = await supabaseClient.from('users').delete().eq('id', id);
         if (error) throw error;
         
@@ -190,9 +212,6 @@ async function deleteUser(id, username) {
     }
 }
 
-// ==========================================
-// NEW: Async Logout 
-// ==========================================
 async function logout() {
     document.getElementById('message').textContent = 'Logging out...';
     try { await logActivity("Logged out"); } catch (e) {}
