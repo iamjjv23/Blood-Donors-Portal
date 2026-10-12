@@ -28,13 +28,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             return;
         }
 
-        // ==========================================
-        // NEW: CHECK IF ACCOUNT IS DEACTIVATED
-        // ==========================================
         if (data.is_active === false) {
             msgDiv.textContent = 'Account Deactivated. Please contact the Master Admin.';
             msgDiv.style.color = '#ff4e4e';
-            return; // Stops the login process completely
+            return; 
         }
 
         msgDiv.textContent = 'Login successful! Redirecting...';
@@ -43,6 +40,17 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         localStorage.setItem('token', data.id); 
         localStorage.setItem('role', data.role);
         localStorage.setItem('userId', data.id);
+
+        // ==========================================
+        // NEW: Log the Login Event & Flag Session
+        // ==========================================
+        sessionStorage.setItem('session_logged', 'true'); // Prevents "Resumed" from firing instantly
+        try {
+            await supabaseClient.from('activity_logs').insert({
+                user_id: data.id,
+                action_details: 'Logged in (via Web)'
+            });
+        } catch (e) {}
 
         if (data.role === 'Master_admin') window.location.href = 'fetch/master.html';
         else if (data.role === 'Organiser_user') window.location.href = 'fetch/organiser.html';
